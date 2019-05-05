@@ -1,0 +1,97 @@
+---
+title: "Ch.5 Comparing Groups: Table and visulizations"
+output: html_document
+---
+
+# Ch.5 Comparing Groups: Table and visulizations"
+
+##building the base dataset
+
+We'll, I don't feel like building this base data set so I'm joinst going to download it
+
+```{r}
+seg.df = read.csv("http://goo.gl/qw303p")
+
+summary(seg.df)
+
+library(psych)
+describe(seg.df)
+```
+
+Okay, so there are a few groups in this data set, they are:
+`r unique(seg.df$Segment)`
+
+so, let's take a look at the income. The reason we are doing this is to get a sense, just a sense, of how income various with the various groups. 
+
+```{r}
+by(seg.df$income, seg.df$Segment, mean)
+
+by(seg.df$income, list(seg.df$Segment, seg.df$subscribe), mean)
+
+#or, we can use the aggregate function
+aggregate(seg.df$income, list(seg.df$Segment), mean)
+```
+
+
+This method is all good for basic data functions, but if we start getting into more complex data, we will need a better method for this, that is where the a formula notation will work, for example we could us the following:  
+
+```{r}
+aggregate(income ~ Segment + ownHome, dat=seg.df, mean)
+```
+* "aggregate(income ~ Segment + ownHome, dat=seg.df, mean)" `r  aggregate(income ~ Segment + ownHome, dat=seg.df, mean) `  
+* "aggregate(income ~ Segment + ownHome + subscribe, data =seg.df, mean)" `r  aggregate(income ~ Segment + ownHome + subscribe, data =seg.df, mean) `
+```{r}
+
+```
+* "xtabs(kids ~ Segment, data =seg.df)"
+`r xtabs(kids ~ Segment, data =seg.df)`
+
+
+This can also be expanded to the grids, with the lattics packages
+
+`r require(lattice)`
+* "histogram(~subscribe | Segment, data = seg.df)"
+`r histogram(~subscribe | Segment, data = seg.df)`
+
+The pipe above is a conidtional, so it's tell lattice to create the graph conidtional on segement
+
+We can also jazz it up a bit
+
+* "histogram(~subscribe | Segment, data = seg.df, type="count", layout = c(4,1), col = c("burlywood","darkolivegreen"))"
+`r histogram(~subscribe | Segment, data = seg.df, type="count", layout = c(4,1), col = c("burlywood","darkolivegreen"))`
+
+Or conditoinal it on more than one variables   
+
+* "histogram(~subscribe | Segment + ownHome, data = seg.df)"
+`r histogram(~subscribe | Segment + ownHome, data = seg.df)`
+
+
+###Visualization by group of continouse Data
+
+Okay, say we want to focus on income, but cut it by segement. A bar chart is always a good bet. The problem is that we have to preprocess the data becuase barcharts show the direct value (as opposed to hist that show the COUNT)
+
+so:
+* seg.income.agg = aggregate(income ~ Segment + ownHome, data = seg.df, mean)
+`r seg.income.agg = aggregate(income ~ Segment + ownHome, data = seg.df, mean)`
+* barchart(income ~ Segment, data = seg.income.agg, groups = ownHome, auto.key = T, par.settings = simpleTheme(col = terrain.colors(2)))
+`r barchart(income ~ Segment, data = seg.income.agg, groups = ownHome, auto.key = T, par.settings = simpleTheme(col = terrain.colors(2)))`
+
+However, a box and whisker plot will show you more detail!  
+```{r}
+boxplot(income ??? Segment, data=seg.df, yaxt="n", ylab="Income ($k)")
+ax.seq <- seq(from=0, to=120000, by=20000)
+axis(side=2, at=ax.seq, labels=paste(ax.seq/1000, "k", sep=""), las=1)
+```
+
+As you can see the Urban Hip has lower income, but also has a lot tighter spread, while traverers have a huge spread, and in general have a higher income than everyone else.
+
+And...of course, lattice can make a better box plot with bwplot  
+* bwplot(Segment ~ income, data = seg.df, horizontal=T, xlab = "Income")
+`r bwplot(Segment ~ income, data = seg.df, horizontal=T, xlab = "Income")`
+
+(Word of caution, bw uses formula notation, but it's backwards, becuase we want to see Income (the depndent var) on segement, but the notation above is Segement on Income)
+
+
+Another cool fact is we can provide conditionals as well  
+* bwplot(Segment ~ income | ownHome, data = seg.df, horizontal = T, xlab = "Income")
+`r bwplot(Segment ~ income | ownHome, data = seg.df, horizontal = T, xlab = "Income")`

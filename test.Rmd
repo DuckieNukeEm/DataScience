@@ -1,0 +1,200 @@
+---
+title: "GACRV"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## GACRV 
+
+*mumble mumble something something*
+
+```{r}
+library(tidyverse)
+library(OneR)
+library(randomForest)
+
+source_info = read_csv('le_pointer.txt')
+DIR = source_info[source_info$PROJECT == 'GACRV','FILE_LOC'] 
+
+train = read_csv(paste0(DIR, 'Train.csv'), col_types = cols(fullVisitorId = col_character()))
+test = read_csv(paste0(DIR, 'Test.csv'), , col_types = cols(fullVisitorId = col_character()))
+
+SF = read_csv(paste0(DIR, 'sample_submission_v2.csv'))
+
+```
+
+
+filtering down the data to a smaller amount of variables (just for simiplicity)
+
+```{r}
+train =
+  train %>%
+    mutate(Exposed2Price = ifelse(is.na(Entrance.ProductPrice) & is.na(exit.ProductPrice),0,1),
+           Exposed2Promo = ifelse(is.na(Entrance.promoId) & is.na(exit.promoId), 0,1),
+           Exposed2Ad = ifelse(is.na(adContent),0,1),
+           Exposed2Product = ifelse(is.na(Entrance.v2ProductName) & is.na(exit.v2ProductName), 0, 1),
+           Exposed2adwordsClickInfo.page = ifelse(is.na(adwordsClickInfo.page), 0 ,1),
+           adwordsClickInfo.page = ifelse(is.na(adwordsClickInfo.page), 0 , adwordsClickInfo.page),
+           source = ifelse(regexpr('google',text = source, ignore.case = TRUE)>0, 'Google',source),
+           wasrefered = ifelse(is.na(referralPath), 0 ,1),
+           has_adwordsClickInfo.gclId = ifelse(is.na(adwordsClickInfo.gclId),0,1),
+           date = as.Date(as.character(date), format='%Y%m%d'),
+           Had_Transaction = ifelse(is.na(transactionRevenue), 0 ,1)
+           
+           ) %>%
+    select(date, 
+           fullVisitorId, 
+           visitId,
+           visitNumber,
+           visitStartTime,
+           browser, 
+           operatingSystem, 
+           deviceCategory,
+           continent,
+           subContinent, 
+           networkDomain,
+           hits,
+           pageviews,
+           transactionRevenue, 
+           campaign, 
+           source,
+           medium,
+           keyword, 
+          # referralPath, 
+           wasrefered,
+       #    adContent, 
+           adwordsClickInfo.page, 
+           adwordsClickInfo.slot, 
+           adwordsClickInfo.gclId, 
+           adwordsClickInfo.adNetworkType,
+           Exposed2Price ,
+           Exposed2Promo ,
+           Exposed2Ad ,
+           Exposed2Product,
+           Exposed2adwordsClickInfo.page,
+           wasrefered,
+           has_adwordsClickInfo.gclId,
+        Had_Transaction
+       
+       
+           ) %>%
+      mutate(
+      browser = ifelse(is.na(browser), 'N/A', browser),
+      operatingSystem = ifelse(is.na(operatingSystem), 'N/A', operatingSystem),
+      deviceCategory = ifelse(is.na(deviceCategory), 'N/A', deviceCategory),
+       continent  = ifelse(is.na( continent ), 'N/A',  continent ),
+      subContinent  = ifelse(is.na(subContinent ), 'N/A', subContinent ),
+      networkDomain = ifelse(is.na(networkDomain), 'N/A', networkDomain),
+        
+      transactionRevenue = ifelse(is.na(transactionRevenue), 0,as.numeric(transactionRevenue)),
+      campaign = ifelse(is.na(campaign), 'N/A', campaign),
+      source  = ifelse(is.na( source ), 'N/A',  source ),
+      medium  = ifelse(is.na(medium ), 'N/A', medium ),
+      keyword = ifelse(is.na(keyword), 'N/A', keyword),
+      
+      adwordsClickInfo.slot  = ifelse(is.na(  adwordsClickInfo.slot ), 'N/A',   adwordsClickInfo.slot ),
+      adwordsClickInfo.gclId  = ifelse(is.na(adwordsClickInfo.gclId ), 'N/A', adwordsClickInfo.gclId ),
+      adwordsClickInfo.adNetworkType = ifelse(is.na(adwordsClickInfo.adNetworkType), 'N/A', adwordsClickInfo.adNetworkType),
+      
+      ) %>%
+      mutate(
+        browser = ifelse(browser %in% 
+                           rownames(head(sort(table(browser, useNA = 'always'), decreasing = T), 10)),
+                         browser, 'other'),
+        networkDomain = ifelse(networkDomain %in% 
+                                  rownames(head(sort(table(networkDomain, useNA = 'always'), decreasing = T), 10)), 
+                               networkDomain, 'other'),
+        source =  ifelse(source %in% 
+                           rownames(head(sort(table(source, useNA = 'always'), decreasing = T), 11)),
+                         source, 'other'),
+        keyword = ifelse(keyword %in% 
+                           rownames(head(sort(table(keyword, useNA = 'always'), decreasing = T), 6)), 
+                         keyword, 'other')
+    )
+      
+
+```
+
+OneR
+````{r}
+train_sample = train %>%
+                group_by(Had_Transaction) %>%
+                sample_n(sum(train$Had_Transaction)) %>%
+                ungroup()
+
+
+#subContinent == NorthAmerica == 1
+#networkDomain
+
+OneR(Had_Transaction ~ visitStartTime + browser + 
+      deviceCategory  + hits + pageviews+
+     campaign   + keyword + wasrefered + adwordsClickInfo.page +
+     adwordsClickInfo.slot  + adwordsClickInfo.adNetworkType + Exposed2Price +
+     Exposed2Promo + Exposed2Ad +  Exposed2Product + Exposed2adwordsClickInfo.page + wasrefered , data = train_sample )
+
+
+
+glm.m = glm(Had_Transaction ~ subContinent + networkDomain + operatingSystem + medium + source, data = train_sample)
+summary(glm.m)
+table(train_sample$Had_Transaction, ifelse(glm.m$fitted.values > 0.5,1,0))
+
+ 
+rf = randomForest(Had_Transaction ~ browser + 
+      deviceCategory  + hits + pageviews+
+     campaign   + keyword + wasrefered + adwordsClickInfo.page +
+     adwordsClickInfo.slot  + adwordsClickInfo.adNetworkType + Exposed2Price +
+     Exposed2Promo + Exposed2Ad +  Exposed2Product + Exposed2adwordsClickInfo.page + wasrefered + subContinent + networkDomain + operatingSystem + medium + source, 
+     data = train_sample[complete.cases(train_sample),] %>% 
+       select(-has_adwordsClickInfo.gclId,
+              -adwordsClickInfo.gclId,
+              -date, 
+           -fullVisitorId, 
+           -visitId,
+           -visitStartTime) %>%
+       mutate(Had_Transaction = factor(Had_Transaction)) %>%
+       mutate_if(is.character, as.factor), importance=TRUE, keep.inbag = TRUE )
+```
+
+
+finding if people will repeat
+
+
+```{r}
+train_rep_sample = train %>%
+  group_by(fullVisitorId) %>%
+  summarise(Count = n(), 
+            MHT = max(Had_Transaction),
+            SHT = sum(Had_Transaction),
+            Cost = sum(transactionRevenue), 
+            date = min(date),
+            browser = min(browser),
+            
+            operatingSystem = min(operatingSystem),
+            deviceCategory = min(deviceCategory),
+            continent = min(continent),
+            subContinent = min(subContinent),
+            networkDomain = min(networkDomain),
+            
+            wasrefered = max(wasrefered),
+            Exposed2Price = max(Exposed2Price),
+            Exposed2Promo = max(Exposed2Promo),
+            Exposed2Ad = max(Exposed2Ad),
+            Exposed2Product = max(Exposed2Product),
+            Exposed2adwordsClickInfo.page = max(Exposed2adwordsClickInfo.page)
+            
+            ) %>%
+  filter(MHT > 0) %>%
+  mutate(Depn_Vars = factor(ifelse(Count > 1, 1, 0))) %>%
+  select(-MHT, -SHT, -Count, -fullVisitorId) %>%
+  
+  mutate_if(is.character, as.factor)
+
+rf_rep = randomForest(Depn_Vars ~., data = train_rep_sample, importance=TRUE, keep.inbag = TRUE ) 
+
+
+
+
+```

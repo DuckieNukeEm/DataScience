@@ -1,0 +1,257 @@
+---
+title: "Ch.4 Describnig Data"
+output: html_document
+---
+
+#Chapter 4: Relationships between Con Variables
+
+##building the base dataset
+
+we are going to be building a base dat aset,
+
+```{r}
+#if you wanna cheat
+# chust.df = read.csv("http://goo.gl/PmPkaG")
+
+set.seed(21821)
+ncust = 1000 #number of customers
+cust.df = data.frame(cust.id = as.factor(c(1:ncust)))
+
+cust.df$age = rnorm(ncust, mean = 25, sd = 5) #settting customers age
+cust.df$credit.score = rnorm(n=ncust, mean = 3*cust.df$age + 620, sd = 50) #the custersomers credit score
+
+cust.df$email = (factor(sample(c("yes","no"), size = ncust, replace = T, prob = c(0.8, 0.2))))
+
+cust.df$distance.to.store = exp(rnorm(ncust, mean = 2, sd = 1.2))
+
+summary(cust.df)
+```
+
+so we created a customer id field, the uh 1:ncust is it, then we created the customers age, credit score, if they have an email address, and their distanct to the store. The distance to the store is intresting, but raising it to the power, the values are all positive, and by haivng such a small SD, most are close to the store, but some are really far out
+
+we are not going to create transaction data, using the nagative binomial distributions (which is the oppisite of an event occuring n times in sequence.)
+
+```{r}
+
+cust.df$online.visits = rnbinom(ncust, size = 0.3,
+																mu = 15 + ifelse(cust.df$email=="yes", 15, 0 ) - 0.7 * (cust.df$age - median(cust.df$age)))
+
+#avearge 15 online visits, with an increase of 15 if they have an e-mail and a decreae for older peoples
+
+cust.df$online.trans = rbinom(ncust, size = cust.df$online.visits, prob = 0.3) #30% chance they will place an order if online
+
+cust.df$online.spend = exp(rnorm(ncust, mean = 3, sd =0.1)) *cust.df$online.trans
+
+#how often and how much they went and bought something at hte store
+cust.df$store.trans = rnbinom(ncust, size = 5, mu =3 / sqrt(cust.df$distance.to.store)) #the farther away you are the less lickl you are to make a transaction
+
+cust.df$store.spend = exp(rnorm(ncust, mean =2.5, sd = 0.4)) * cust.df$store.trans
+
+head(cust.df)
+tail(cust.df)
+summary(cust.df)
+```
+
+excellent, we are now going to create some survey data. First we are going to assume people have an average response of 3.1, and then view it in terms of service and selection
+
+```{r}
+
+sat.overall = rnorm(ncust, mean = 3.1, sd = 0.7)
+sat.service = floor(sat.overall + rnorm(ncust, mean =0.5, sd = 0.4))
+sat.selection = floor(sat.overall + rnorm(ncust, mean=-0.2, sd = 0.6))
+
+#gotta to make sure it between the 1 and 5 marking :)
+sat.service[sat.service > 5] = 5
+sat.service[sat.service < 1] = 1
+sat.selection[sat.selection > 5] = 5
+sat.selection[sat.selection < 1] = 1
+
+###now what about the people who actually ddint have a response?
+
+no.response = as.logical(rbinom(ncust, size = 1, prob = cust.df$age/100))
+sat.service[no.response] = NA
+sat.selection[no.response] = NA
+
+cust.df$sat.serivce = sat.service
+cust.df$sat.selection = sat.selection
+
+```
+ 
+ Okay....F that, well our data set is buitl and ready to go
+ 
+ as usall, we always take do a str and summary on the data
+ 
+ `r summary(cust.df)`
+ 
+ `r str(cust.df)`
+ 
+ NOICE
+ 
+ okay, lets look at pairs of contintious vairables. how do we do that...a scatter plot my friend, a scatterplot
+ 
+ ```{r}
+ plot(cust.df$age, cust.df$credit.score,
+ 	col ="blue",
+ 	xlim = c(15,55),
+ 	ylim = c(500,900),
+ 	main = "Active Customers as of June 2014",
+ 	xlab = "Customer Age (Years)",
+ 	ylab = "Customer Credit Score")
+ 	
+ abline(h=mean(cust.df$credit.score), col = 'dark blue', lty = 'dotted')
+ abline(v=mean(cust.df$age), col = 'dark blue', lty = 'dotted')
+ 
+ ```
+ 
+ Do customers who buy more online buy less in stores?
+ 
+ ```{r}
+ plot(cust.df$store.spend, cust.df$online.spend,
+ 	main = "Customres as of June 2014",
+ 	xlab = "Prior 12 months in store sales ($)",
+ 	ylab = "Prior 12 months online sales ($)",
+ 	cex = 0.7)
+ 	
+ 	####hrm, nor vert usefull, let's look at store spend along
+ 	
+ 	hist(cust.df$store.spend,
+ 			breaks = (0:ceiling(max(cust.df$store.spend)/10))*10,			main = "Customers as of June 2014",
+ 			xlab = "Prior 12 months online Sales ($)",
+ 			ylab = "Count of Customers")
+ 
+```
+
+okay, not very usefull, so what we will is add some color to a scatterplot. first we will declare a color vector that maps 1:1 to the e-email address, this will similar hold for line shape, then we just map it into the plot funtionx
+
+```{r}
+
+my.col = c("black", "green3")
+my.pch = c(1,19)
+
+plot(cust.df$store.spend, cust.df$online.spend,
+		 cex = 0.7,
+		 col = my.col[cust.df$email],
+		 pch = my.pch[cust.df$email],
+		 main = "Customres as of June 2014",
+ 		 xlab = "Prior 12 months in store sales ($)",
+ 		 ylab = "Prior 12 months online sales ($)",
+ 		)
+
+legend(x = "topright",
+			 legend = paste("emails on file:", levels(cust.df$email)),
+			 col = my.col,
+			 pch = my.pch)
+```
+
+The data is still very skewed, so we are going to do a quick convert to log IN THE PLOT FUNCTION
+
+```{r}
+
+
+plot(cust.df$store.spend + 1, cust.df$online.spend + 1,
+		 log = "xy",
+		 cex = 0.7,
+		 col = my.col[cust.df$email],
+		 pch = my.pch[cust.df$email],
+		 main = "Customres as of June 2014",
+ 		 xlab = "Prior 12 months in store sales ($)",
+ 		 ylab = "Prior 12 months online sales ($)",
+ 		)
+
+legend(x = "topright",
+			 legend = paste("emails on file:", levels(cust.df$email)),
+			 col = my.col,
+			 pch = my.pch)
+```
+
+
+Hrrrmmmm, okay it doesn't look like there is any relationship at all to store sale and online sales.
+
+But taking a look at one graph at a time is so 2010, lets plot multiple graphs together!
+
+
+```{r}
+ par(mfrow=c(2, 2))
+ plot(cust.df$distance.to.store, cust.df$store.spend, main="store")
+ plot(cust.df$distance.to.store, cust.df$online.spend, main="online")
+ plot(cust.df$distance.to.store, cust.df$store.spend+1, log="xy",
+ main="store, log")
+ plot(cust.df$distance.to.store, cust.df$online.spend+1, log="xy",
+ main="online, log")
+ 
+  par(mfrow=c(1,1))
+```
+  
+  
+  Okay, lets really blow your mind. Let's produce several 'scatter' plots of charts with easy comands
+  
+```{r}
+pairs(cust.df[,c(2:10)])
+
+
+library(car) # install if needed
+# scatterplotMatrix(formula = ??? age + credit.score + email +
+# 															distance.to.store + online.visits + online.trans +
+#  															online.spend + store.trans + store.spend,
+#  															data=cust.df, diagonal="histogram")
+
+#install.packages("gpairs")
+library(gpairs)
+gpairs(cust.df[,c(2:10)])
+
+library(corrplot)
+library(gplots)
+corrplot.mixed(corr=cor(cust.df[,c(2,3,5:12)],
+												use = "complete.obs"),
+							 upper = "ellipse",
+							 tl.pos = "lt",
+							 col = colorpanel(50, "red","gray60","blue4"))
+```
+
+okay, we all know about cor, cor.test (to test if a given correlation is strong)
+
+but these are only measuring linear combinations, and most linear regression are under the assumption that the variables ar egaussian, so we have the typical transofmrations
+
+Log(x)  fo r unit sales, revenue, househould income, price
+1/x, 1/x^2, log(x) - for distanct
+e^x/(1+e^x) - market or prefence share base on utility
+root(x) for righ ttailed distributions
+x^2 for left tailed dsitrubtions
+
+but let's talk about the box-cox transformation, we can easily detmirne what it needs to be using the powerTransform() from the car package to find lambda, and then providing the transofmration via  bcPower()
+
+```{r}
+library(car)
+
+powerTransform(cust.df$distance.to.store)
+
+lambda = coef(powerTransform(1/cust.df$distance.to.store))
+head(bcPower(cust.df$distance.to.store, lambda = lambda))
+
+
+####lets take a look at a transformed and non transformed side by side
+
+par(mfrow=c(1,2))
+hist(cust.df$distance.to.store,
+	 xlab="Distance to Nearest Store", ylab="Count of Customers",
+	 main="Original Distribution")
+hist(bcPower(cust.df$distance.to.store, lambda = lambda),
+	 xlab="Box-Cox Transform of Distance", ylab="Count of Customers",
+	 main="Transformed Distribution")
+par(mfrow = c(1,1))
+
+```
+
+
+okay, dats nice, but....what about ordinal data, how do we get correlations of them, the psych packages got you covered. it assumes that in ordinal data, the 'latent' data (for example, what value people really had in mind) is continious, but they forced it into discret buckets.
+
+```{r}
+
+library(psych)
+
+resp = !is.na(cust.df$sat.serivce)
+
+polychoric(cbind(cust.df[resp,]$sat.serivce,
+								 cust.df[resp,]$sat.selection)
+					 )
+```

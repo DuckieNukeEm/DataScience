@@ -1,0 +1,366 @@
+---
+title: "Ch 12 Excercises"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+#Chapter 12 Excercises
+
+## 1
+
+**In the golden-section algorithm, suppose that you start with** $x_l=0, \ x_m=0.5 \ x_r =1$ **and that at each step if** $x_r − x_m > x_m − x_l$, **then** $y =\frac{(x_m + x_r )}{2}$**, while if **$x_r − x_m \leq x_m − x_l$ **, then **$y = \frac{(x_l + x_m )}{2}$**. In the worst-case scenario, for this choice of y, by what factor does the width of the bracketing interval reduce each time? In the worst-case scenario, is this choice of y better or worse than the usual golden-section rule?**  
+
+```{r}
+gsection_h <- function(ftn, x.l, x.r, x.m, tol = 1e-9) {
+  gr1 <- 1 + (1 + sqrt(5))/2
+  # successively refine x.l, x.r, and x.m
+  f.l <- ftn(x.l)
+  f.r <- ftn(x.r)
+  f.m <- ftn(x.m)
+  while ((x.r - x.l) > tol) {
+    if ((x.r - x.m) > (x.m - x.l)) {
+      y <- (x.r + x.m)/2
+      f.y <- ftn(y)
+      if (f.y >= f.m) {
+        x.l <- x.m
+        f.l <- f.m
+        x.m <- y
+        f.m <- f.y
+      } else {
+        x.r <- y
+        f.r <- f.y
+      }
+    } else {
+      y <- (x.l + x.m)/2
+      f.y <- ftn(y)
+      if (f.y >= f.m) {
+        x.r <- x.m
+        f.r <- f.m
+        x.m <- y
+        f.m <- f.y
+      } else {
+        x.l <- y
+        f.l <- f.y
+      }
+    }
+  }
+  return(x.m)
+}
+```
+
+
+
+in the worst case, the interval will halve every time. (thus is will reduce by a factor of 0.5, not ro/(1+ro))
+
+**What about the best-case scenario?**
+
+
+## 3
+
+**Write a version of function gsection that plots intermediate results. That is, plot the function being optimised, then at each step draw a vertical line at the positions** $x_l,\ x_r,\ x_m,$ **and** $y$ **(with the line at y in a different colour).**
+
+```{r}
+gsection <- function(ftn, x.l, x.r, x.m, tol = 1e-9) {
+  gr1 <- 1 + (1 + sqrt(5))/2
+  # successively refine x.l, x.r, and x.m
+  x_range = seq(x.l, x.r, by = 100)
+  f_x = as.vector(sapply(x_range, ftn))
+  
+  f.l <- ftn(x.l)
+  f.r <- ftn(x.r)
+  f.m <- ftn(x.m)
+  while ((x.r - x.l) > tol) {
+    if ((x.r - x.m) > (x.m - x.l)) {
+      y <- x.m + (x.r - x.m)/gr1
+      f.y <- ftn(y)
+      if (f.y >= f.m) {
+        x.l <- x.m
+        f.l <- f.m
+        x.m <- y
+        f.m <- f.y
+      } else {
+        x.r <- y
+        f.r <- f.y
+      }
+    } else {
+      y <- x.m - (x.m - x.l)/gr1
+      f.y <- ftn(y)
+      if (f.y >= f.m) {
+        x.r <- x.m
+        f.r <- f.m
+        x.m <- y
+        f.m <- f.y
+      } else {
+        x.l <- y
+        f.l <- f.y
+      }
+    }
+    
+    
+  plot(x_range, f_x, type = "l", xlab = "x", ylab = "f(x)",
+    main = "plot of Function", col = "blue", lwd = 2)
+  lines(c(x.l, ftn(x.l)), c(x.l, 0) , col = 'blue')
+  lines(c(x.m, ftn(x.m)), c(x.m, 0) , col = 'blue')
+  lines(c(x.r, ftn(x.r)), c(x.r, 0) , col = 'blue')
+  lines(c(y, f.y), c(f.y, 0) , col = 'red')
+  }
+  return(x.m)
+}
+```
+
+
+## 5
+
+**Suppose** $f : R^d → R$**. Since** $\frac{∂f (x)}{∂x_i} = lim_{\epsilon \to 0} \frac{(f(x + \epsilon e_i)−f(x))}{\epsilon},$ **we have for small** $\epsilon$
+\[
+\frac{∂f (x)}{∂x_i} \approx \frac{f(x + \epsilon e_i)−f(x)}{\epsilon}
+\]
+**In the same way, show that for **$i \ne j$
+\[
+\frac{\delta^2f(x)}{\delta x_i \delta x_j} \approx \frac{f(x + \epsilon e_i + \epsilon  e_j ) − f (x + \epsilon e_i ) − f (x + \epsilon e_j ) + f(x)}{\epsilon^2}
+\]
+**and**
+\[
+\frac{∂^2f (x)}{∂x_i^2} \approx \frac{f(x + 2\epsilon e_i) - f(x + \epsilon e_i) +f(x)}{\epsilon^2}
+\]
+**(a). Test the accuracy of these approximations using the function** $f(x,y)=x^3 + xy^2$ **at the point (1, 1). That is, for a variety of** $\epsilon$**, calculate the approximate gradient and Hessian, and see by how much they differ from the true gradient and Hessian. In R real numbers are only accurate to order 10e−16 (try 1+10^{-16} == 1). Thus the error in estimating ** $\frac{∂f(x)}{∂x_i}$ **is of the order 10e−16** $\epsilon$**.For example, if **$\epsilon=10^{−8}$**then the error will be order 10e−8. It is worse for second-order derivatives: the error in estimating** $\frac{∂^2f(x)}{∂x_i∂x_j}$ **is of the order 10e−16/**$ǫ 2$**. Thus if** $\epsilon=10^{−8}$ **then the error will be order 1. We see that we have a trade-off in our choice of**$\epsilon$**: too large and we have a poor approximation of the limit; too small and we suffer rounding error.**
+
+okay, so \[  \frac{\delta f}{\delta x} = 3x^2 +y^2 \ and \ \frac{\delta f}{\delta y} = 2xy \] 
+\[\frac{\delta f}{\delta x\ \delta y} = \frac{\delta f}{\delta y \ \delta x} = 2y \]
+\[ \frac{\delta ^2 f}{\delta x^2} = 6x \ and \ \frac{\delta ^2 f}{\delta y^2} = 2x\]
+
+```{r}
+library(tidyverse)
+
+func = function(x, y){
+  x^3 + x * y ^2
+}
+
+af_x = function(x = 1, y = 1, epi){
+  (func(x + epi, y) - func(x,y))/epi
+}
+
+af_y = function(x = 1, y = 1, epi){
+  (func(x, y + epi) - func(x,y))/epi
+}
+
+af_xy = function(x = 1, y = 1, epi){
+  (func(x + epi, y + epi) - func(x + epi, y ) - func(x, y + epi) + func(x,y))/(epi^2)
+}
+
+af_xx = function(x = 1, y = 1, epi){
+  (func(x + 2*epi, y) - 2*func(x + epi, y) + func(x,y))/(epi^2)
+}
+
+af_yy = function(x = 1, y = 1, epi){
+  (func(x, y + 2*epi) - 2*func(x, y + epi) + func(x,y))/(epi^2)
+}
+tibble(epi = c(1,0.1,0.01,0.001,0.0001,0.00001,0.000001,0.0000001,0.00000001,0.000000001)) %>%
+  mutate(
+    df_x = 4,
+    af_x = af_x(epi = epi),
+    df_y = 2,
+    af_y = af_y(epi = epi),
+    df_xy = 2,
+    af_xy = af_xy(epi = epi),
+    df_xx = 6,
+    af_xx = af_xx(epi =epi),
+    df_yy = 2,
+    af_yy = af_yy(epi =epi)
+  )
+
+```
+
+  
+**(b). Modify the steepest ascent method, replacing the gradient with an approximation. Apply your modified algorithm to the function** $f(x,y)=sin(\frac{x^2}{2} − \frac{y^2}{4})cos(2x − e^y))$**, using the same starting points as in Example 12.4.2. How does the algorithm’s behaviour depend on your choice of** $\epsilon$**? You might find it helpful to plot each step, as in Exercise 4.**
+
+### Loading functions
+```{r}
+
+gsection <- function(ftn, x.l, x.r, x.m, tol = 1e-9) {
+  # applies the golden-section algorithm to maximise ftn
+  # we assume that ftn is a function of a single variable
+  # and that x.l < x.m < x.r and ftn(x.l), ftn(x.r) <= ftn(x.m)
+  #
+  # the algorithm iteratively refines x.l, x.r, and x.m and terminates
+  # when x.r - x.l <= tol, then returns x.m
+
+  # golden ratio plus one
+  gr1 <- 1 + (1 + sqrt(5))/2
+
+  # successively refine x.l, x.r, and x.m
+  f.l <- ftn(x.l)
+  f.r <- ftn(x.r)
+  f.m <- ftn(x.m)
+  while ((x.r - x.l) > tol) {
+    if ((x.r - x.m) > (x.m - x.l)) {
+      y <- x.m + (x.r - x.m)/gr1
+      f.y <- ftn(y)
+      if (f.y >= f.m) {
+        x.l <- x.m
+        f.l <- f.m
+        x.m <- y
+        f.m <- f.y
+      } else {
+        x.r <- y
+        f.r <- f.y
+      }
+    } else {
+      y <- x.m - (x.m - x.l)/gr1
+      f.y <- ftn(y)
+      if (f.y >= f.m) {
+        x.r <- x.m
+        f.r <- f.m
+        x.m <- y
+        f.m <- f.y
+      } else {
+        x.l <- y
+        f.l <- f.y
+      }
+    }
+  }
+  return(x.m)
+}
+
+
+line.search <- function(f, x, y, tol = 1e-9, a.max = 2^5) {
+    # f is a real function that takes a vector of length d
+    # x and y are vectors of length d
+    # line.search uses gsection to find a >= 0 such that
+    #   g(a) = f(x + a*y) has a local maximum at a,
+    #   within a tolerance of tol
+    # if no local max is found then we use 0 or a.max for a
+    # the value returned is x + a*y
+
+    if (sum(abs(y)) == 0) return(x) # g(a) constant
+
+    g <- function(a) return(f(x + a*y))
+
+    # find a triple a.l < a.m < a.r such that
+    # g(a.l) <= g(a.m) and g(a.m) >= g(a.r)
+    # a.l
+    a.l <- 0
+    g.l <- g(a.l)
+    # a.m
+    a.m <- 1
+    g.m <- g(a.m)
+    while ((g.m < g.l) & (a.m > tol)) {
+        a.m <- a.m/2
+        g.m <- g(a.m)
+    }
+    # if a suitable a.m was not found then use 0 for a
+    if ((a.m <= tol) & (g.m < g.l)) return(x)
+    # a.r
+    a.r <- 2*a.m
+    g.r <- g(a.r)
+    while ((g.m < g.r) & (a.r < a.max)) {
+        a.m <- a.r
+        g.m <- g.r
+        a.r <- 2*a.m
+        g.r <- g(a.r)
+    }
+    # if a suitable a.r was not found then use a.max for a
+    if ((a.r >= a.max) & (g.m < g.r)) return(x + a.max*y)
+
+    # apply golden-section algorithm to g to find a
+    a <- gsection(g, a.l, a.r, a.m)
+    return(x + a*y)
+}
+
+ascent <- function(f, grad.f, x0, tol = 1e-9, n.max = 100) {
+    # steepest ascent algorithm
+    # find a local max of f starting at x0
+    # function grad.f is the gradient of f
+    
+    x.old <- x0
+    x <- line.search(f, x0, grad.f(x0))
+    n <- 1
+    while ((f(x) - f(x.old) > tol) & (n < n.max)) {
+        x.old <- x
+        x <- line.search(f, x, grad.f(x))
+        n <- n + 1
+    }
+    return(x)
+}
+```
+
+okay, we got the functions loaded, now we got to modify ascent so that a) it can deal with multiple variables and b) it uses an approximation
+
+```{r}
+line.search.mod <- function(f, x, y, grad_x, grad_y, tol = 1e-9, a.max = 2^5) {
+
+    if (sum(abs(y)) == 0) return(x) # g(a) constant
+
+    g <- function(a) return(f(x = (x + a*grad_x), y = (y + a*grad_y)))
+
+    # find a triple a.l < a.m < a.r such that
+    # g(a.l) <= g(a.m) and g(a.m) >= g(a.r)
+    # a.l
+    a.l <- 0
+    g.l <- g(a.l)
+    # a.m
+    a.m <- 1
+    g.m <- g(a.m)
+    while ((g.m < g.l) & (a.m > tol)) {
+        a.m <- a.m/2
+        g.m <- g(a.m)
+    }
+    # if a suitable a.m was not found then use 0 for a
+    if ((a.m <= tol) & (g.m < g.l)) return(x)
+    # a.r
+    a.r <- 2*a.m
+    g.r <- g(a.r)
+    while ((g.m < g.r) & (a.r < a.max)) {
+        a.m <- a.r
+        g.m <- g.r
+        a.r <- 2*a.m
+        g.r <- g(a.r)
+    }
+    # if a suitable a.r was not found then use a.max for a
+    if ((a.r >= a.max) & (g.m < g.r)) return(x + a.max*y)
+
+    # apply golden-section algorithm to g to find a
+    a <- gsection(g, a.l, a.r, a.m)
+    x_out = c(x + a*grad_x, y + a*grad_y)
+    return(x_out)
+}
+
+ascent_mod = function(f, grad.f_x, grad.f_y, x0, y0, tol = 1e-9, n.max =100 ){
+  xy.old = c(x0,y0)
+  xy = line.search.mod(f, x0, y0, grad.f_x(x = x0, y = y0), grad.f_y(x = x0, y = x0))
+    n <- 1
+    print(xy)
+    while (((f(xy[1], xy[2]) - f(xy.old[1], xy.old[2])) > tol) & (n < n.max)) {
+        xy.old <- xy
+        xy <- line.search.mod(f, xy[1], xy[2], grad.f_x(x = xy[1], y = xy[2]), grad.f_y(x = xy[1], y = xy[2]) )
+        n <- n + 1
+    }
+    return(xy)
+  
+}
+
+f = function(x,y){
+  sin(x^2/2 - y^2/4) * cos(2*x - exp(y))
+}
+
+grad.f_x =  function(x,y) {
+  2 * sin(exp(y) - 2*x)*sin(x^2/2 - y^2/4) + x* cos(exp(y)-2*x)*cos(x^2/2 - y^2/4)
+}
+
+grad.f_y = function(x,y){
+  
+   -1 * exp(y) * sin(exp(y) - 2*x)*sin(x^2/2 - y^2/4) - y/2 * cos(exp(y)-2*x)*cos(x^2/2 - y^2/4)
+}
+  
+
+####
+#for (x0 in seq(1, 1.6, .1)){
+#  for (y0 in seq(1, 1.6, .1)) {
+#    cat(c(x0,y0), '-->', ascent_mod(f, grad.f_y, grad.f_y, x0,y0))
+#  }
+#}
+```
+So the search kept throughing an error so...I'll fix it later (probably won't)

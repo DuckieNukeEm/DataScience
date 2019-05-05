@@ -1,0 +1,190 @@
+---
+title: "Data Exploration For Speed Dating"
+author: "DuckieNukeEm"
+date: "June 16, 2016"
+output: html_document
+---
+
+```{r, echo = F}
+setwd("C:/Users/Cameron/OneDrive")
+library(ggplot2)
+data = read.csv("./Data/Kaggle Data/SpeedDating/Speed Dating Data.csv")
+
+```
+
+## R Markdown
+GOOD MARROW PEOPLE OF THE DATING WORlD
+
+This is my first crack at trying one of these, so this will be rough. But please do not hestiatet to provided constructive cristism for this.
+
+Anyways, the data set, Speed Dating Data.csv, comes from Kaggle website and can be access via the following link, <https://www.kaggle.com/annavictoria/speed-dating-experiment/downloads/Speed%20Dating%20Data.csv.zip>
+
+#Value of what people look for
+
+Each person was asked at the start of the session what they are looking for. They were alloted 100pt and could distriubte it among 6 features. Waves 6~9 were given a 10 pt scale each, but the researchers converted into 100pt for us (THANKS GUYS :))
+
+---
+What are you Looking for in a date
+
+```{r, echo = F}
+par(mfrow=c(2,3))
+hist(data[,"attr1_1"], breaks = seq(0,100,by=5),col = "blue", freq = F, border = "black",
+          main = "Histogram for Attraction", xlab = "Rank", ylab = "Counts")
+
+hist(data[,"sinc1_1"], breaks = seq(0,100,by=5),col = "blue", freq = F, border = "black",
+          main = "Histogram for sincirity", xlab = "Rank", ylab = "Counts")
+
+hist(data[,"intel1_1"], breaks = seq(0,100,by=5),col = "blue", freq = F, border = "black",
+          main = "Histogram for Intelligece", xlab = "Rank", ylab = "Counts")
+
+hist(data[,"fun1_1"], breaks = seq(0,100,by=5),col = "blue", freq = F, border = "black",
+          main = "Histogram for Fun", xlab = "Rank", ylab = "Counts")
+
+hist(data[,"amb1_1"], breaks = seq(0,100,by=5),col = "blue", freq = F, border = "black",
+          main = "Histogram for Ambition", xlab = "Rank", ylab = "Counts")
+
+hist(data[,"shar1_1"], breaks = seq(0,100,by=5),col = "blue", freq = F, border = "black",
+          main = "Histogram for shared Intrest", xlab = "Rank", ylab = "Counts")
+```
+
+People are shallow and clearly rank Looks higher then intelligence, looks like Sincirity and Fun are tied for 3, and nobody gives a crap about shared intrest and ambitions. Shallow bastards!
+
+So how do the lads vs Ladies stack up?
+
+
+```{r, echo = F}
+par(mfrow=c(2,3))
+
+hist(data[data$gender == 0 ,"attr1_1"], breaks = seq(0,100,by=5),col = "pink", freq = F, border = "black",
+          main = "Histogram for Attraction for Females", xlab = "Rank", ylab = "Counts")
+
+hist(data[data$gender == 0,"sinc1_1"], breaks = seq(0,100,by=5),col = "pink", freq = F, border = "black",
+          main = "Histogram for sincirity for Females", xlab = "Rank", ylab = "Counts")
+
+hist(data[data$gender == 0,"intel1_1"], breaks = seq(0,100,by=5),col = "pink", freq = F, border = "black",
+          main = "Histogram for Intelligece for Females", xlab = "Rank", ylab = "Counts")
+
+hist(data[data$gender == 0,"fun1_1"], breaks = seq(0,100,by=5),col = "pink", freq = F, border = "black",
+          main = "Histogram for Fun for Females", xlab = "Rank", ylab = "Counts")
+
+hist(data[data$gender == 0,"amb1_1"], breaks = seq(0,100,by=5),col = "pink", freq = F, border = "black",
+          main = "Histogram for Ambition for Females", xlab = "Rank", ylab = "Counts")
+
+hist(data[data$gender == 0,"shar1_1"], breaks = seq(0,100,by=5),col = "pink", freq = F, border = "black",
+          main = "Histogram for shared Intrest for Females", xlab = "Rank", ylab = "Counts")
+title(main = "What are you looking for? - Just the ladies", outer = T)
+```
+
+
+
+```{r, echo = F}
+par(mfrow=c(2,3))
+
+hist(data[data$gender == 1 ,"attr1_1"], breaks = seq(0,100,by=5),col = "light blue", freq = F, border = "black",
+          main = "Histogram for Attraction for Males", xlab = "Rank", ylab = "Counts")
+
+hist(data[data$gender == 1,"sinc1_1"], breaks = seq(0,100,by=5),col = "light blue", freq = F, border = "black",
+          main = "Histogram for sincirity for Males", xlab = "Rank", ylab = "Counts")
+
+hist(data[data$gender == 1,"intel1_1"], breaks = seq(0,100,by=5),col = "light blue", freq = F, border = "black",
+          main = "Histogram for Intelligece for Males", xlab = "Rank", ylab = "Counts")
+
+hist(data[data$gender == 1,"fun1_1"], breaks = seq(0,100,by=5),col = "light blue", freq = F, border = "black",
+          main = "Histogram for Fun for Males", xlab = "Rank", ylab = "Counts")
+
+hist(data[data$gender == 1,"amb1_1"], breaks = seq(0,100,by=5),col = "light blue", freq = F, border = "black",
+          main = "Histogram for Ambition for Males", xlab = "Rank", ylab = "Counts")
+
+hist(data[data$gender == 1,"shar1_1"], breaks = seq(0,100,by=5),col = "light blue", freq = F, border = "black",
+          main = "Histogram for shared Intrest for Males", xlab = "Rank", ylab = "Counts")
+title(main = "What are you looking for? - only the gents", outer = T)
+```
+
+Shit I already knew, guys care more about looks than ladies do, while ladies have a slightly higher intrest in ambition and shared intrest. Ambition, that's a curious one, why would they be diffrent? OH WELL
+
+##What do you think your date is looking for?
+
+Intresting stuff so far, so the participants were also asked to rank what their date was looking for
+
+
+
+```{r, echo = F}
+par(mfrow=c(2,3))
+hist(data[,"attr2_1"], breaks = seq(0,100,by=5),col = "blue", freq = F, border = "black",
+          main = "Histogram for Attraction - Dates View", xlab = "Rank", ylab = "Counts")
+
+hist(data[,"sinc2_1"], breaks = seq(0,100,by=5),col = "blue", freq = F, border = "black",
+          main = "Histogram for sincirity - Dates View", xlab = "Rank", ylab = "Counts")
+
+hist(data[,"intel2_1"], breaks = seq(0,100,by=5),col = "blue", freq = F, border = "black",
+          main = "Histogram for Intelligece - Dates View", xlab = "Rank", ylab = "Counts")
+
+hist(data[,"fun2_1"], breaks = seq(0,100,by=5),col = "blue", freq = F, border = "black",
+          main = "Histogram for Fun - Dates View", xlab = "Rank", ylab = "Counts")
+
+hist(data[,"amb2_1"], breaks = seq(0,100,by=5),col = "blue", freq = F, border = "black",
+          main = "Histogram for Ambition - Dates View", xlab = "Rank", ylab = "Counts")
+
+hist(data[,"shar2_1"], breaks = seq(0,100,by=5),col = "blue", freq = F, border = "black",
+  main = "Histogram for shared Intrest - Dates View", xlab = "Rank", ylab = "Counts")
+```
+
+
+looks like the same story as previous
+
+So how do the lads vs Ladies stack up?
+
+
+```{r, echo = F}
+par(mfrow=c(2,3))
+
+hist(data[data$gender == 0 ,"attr2_1"], breaks = seq(0,100,by=5),col = "pink", freq = F, border = "black",
+          main = "Histogram for Attraction for Females - Date View", xlab = "Rank", ylab = "Counts")
+
+hist(data[data$gender == 0,"sinc2_1"], breaks = seq(0,100,by=5),col = "pink", freq = F, border = "black",
+          main = "Histogram for sincirity for Females - Date View", xlab = "Rank", ylab = "Counts")
+
+hist(data[data$gender == 0,"intel2_1"], breaks = seq(0,100,by=5),col = "pink", freq = F, border = "black",
+          main = "Histogram for Intelligece for Females - Date View", xlab = "Rank", ylab = "Counts")
+
+hist(data[data$gender == 0,"fun2_1"], breaks = seq(0,100,by=5),col = "pink", freq = F, border = "black",
+          main = "Histogram for Fun for Females - Date View", xlab = "Rank", ylab = "Counts")
+
+hist(data[data$gender == 0,"amb2_1"], breaks = seq(0,100,by=5),col = "pink", freq = F, border = "black",
+          main = "Histogram for Ambition for Females - Date View", xlab = "Rank", ylab = "Counts")
+
+hist(data[data$gender == 0,"shar2_1"], breaks = seq(0,100,by=5),col = "pink", freq = F, border = "black",
+          main = "Histogram for shared Intrest for Females - Date View", xlab = "Rank", ylab = "Counts")
+title(main = "What is your date looking for? - Just the ladies", outer = T)
+```
+
+
+
+```{r, echo = F}
+par(mfrow=c(2,3))
+
+hist(data[data$gender == 1 ,"attr2_1"], breaks = seq(0,100,by=5),col = "light blue", freq = F, border = "black",
+          main = "Histogram for Attraction for Males  - Date View", xlab = "Rank", ylab = "Counts")
+
+hist(data[data$gender == 1,"sinc2_1"], breaks = seq(0,100,by=5),col = "light blue", freq = F, border = "black",
+          main = "Histogram for sincirity for Males  - Date View", xlab = "Rank", ylab = "Counts")
+
+hist(data[data$gender == 1,"intel2_1"], breaks = seq(0,100,by=5),col = "light blue", freq = F, border = "black",
+          main = "Histogram for Intelligece for Males  - Date View", xlab = "Rank", ylab = "Counts")
+
+hist(data[data$gender == 1,"fun2_1"], breaks = seq(0,100,by=5),col = "light blue", freq = F, border = "black",
+          main = "Histogram for Fun for Males  - Date View", xlab = "Rank", ylab = "Counts")
+
+hist(data[data$gender == 1,"amb2_1"], breaks = seq(0,100,by=5),col = "light blue", freq = F, border = "black",
+          main = "Histogram for Ambition for Males - Date View", xlab = "Rank", ylab = "Counts")
+
+hist(data[data$gender == 1,"shar2_1"], breaks = seq(0,100,by=5),col = "light blue", freq = F, border = "black",
+          main = "Histogram for shared Intrest for Males  - Date View", xlab = "Rank", ylab = "Counts")
+title(main = "What is your date looking for? - only the gents", outer = T)
+```
+
+
+OOOO, intresting, so the gals think the guys are shallow and really only care about looks.
+
+
+##How do you stack up

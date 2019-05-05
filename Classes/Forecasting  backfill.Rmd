@@ -1,0 +1,93 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+Okay, so I ran across this site: <http://www.business-science.io/business/2017/10/16/sales_backorder_prediction.html>
+and want to try it
+
+
+# Introduction
+##Predicting back orders
+
+###Part 1: Why predict back orders
+From investopedia:
+> A customer order that has not been fulfilled. A backorder generally indicates that customer demand for a product or service exceeds a company’s capacity to supply it. Total backorders, also known as backlog, may be expressed in terms of units or dollar amount.
+
+There are good and bads part of Back orders  
+* **The Good**: backorders indicate healthy demand for a product  
+* **The Bad**: Customers may cancle orders if their orders arn't filled in a timely maner.
+
+Companies are constantly striving for balance in mananging backorders. To much supply and you will have wasted shelf space and capital tied up in goods. To little supply and you risk loosing customers
+
+Now, by using maching learning, we can balance the demand with the supply. That is the sweet spot, have enough units avail for all demand and not a single unit more.
+
+###Part 2: Challanges
+
+it's not easy to figure this out for three main reasons. First: Demand can flucuate with random events (think snow shovels and freak snow storms) Second: If a back order is ifnrequent, a sudden influx could sink you. And Third: It's time dependent.
+
+###Part 3: The set up
+
+We will be using machine learning to predict future back order from a fictional company. We'll be using a dataset from Kaggle:
+
+<https://www.kaggle.com/tiredgeek/predict-bo-trial/downloads/Kaggle_Training_Dataset_v2.csv>
+
+<https://www.kaggle.com/tiredgeek/predict-bo-trial/downloads/Kaggle_Test_Dataset_v2.csv>
+
+The data file contains the historical data for the 8 weeks prior to the week we are trying to predict. The data were taken as weekly snapshots at the start of each week. The target (or response) is the went_on_backorder variable. To model and predict the target, we’ll use the other features, which include:  
+* sku - Random ID for the product  
+* national_inv - Current inventory level for the part  
+* lead_time - Transit time for product (if available) 
+* in_transit_qty - Amount of product in transit from source  
+* forecast_3_month - Forecast sales for the next 3 months  
+* forecast_6_month - Forecast sales for the next 6 months  
+* forecast_9_month - Forecast sales for the next 9 months  
+* sales_1_month - Sales quantity for the prior 1 month time period  
+* sales_3_month - Sales quantity for the prior 3 month time period  
+* sales_6_month - Sales quantity for the prior 6 month time period  
+* sales_9_month - Sales quantity for the prior 9 month time period  
+* min_bank - Minimum recommend amount to stock  
+* potential_issue - Source issue for part identified  
+* pieces_past_due - Parts overdue from source  
+* perf_6_month_avg - Source performance for prior 6 month period   
+* perf_12_month_avg - Source performance for prior 12 month period  
+* local_bo_qty - Amount of stock orders overdue  
+* deck_risk - Part risk flag  
+* oe_constraint - Part risk flag  
+* ppap_risk - Part risk flag  
+* stop_auto_buy - Part risk flag  
+* rev_stop - Part risk flag 
+* **went_on_backorder** - Product actually went on backorder. This is the target value.
+
+
+###Part 4: Let's do this
+
+####Library
+Okay, let's load our librarys
+```{r}
+library(tidyverse)
+library(unbalanced)
+library(h2o)
+```
+
+#####Data load
+Now loading out data
+
+```{r}
+train_raw_df = read_csv("c:/DATA/Kaggle_Training_Dataset_v2.csv")
+test_raw_df = read_csv("c:/DATA/Kaggle_Test_Dataset_v2.csv")
+```
+
+#####inspect
+
+```{r}
+train_raw_df %>% head() %>% knitr::kable(caption = 'head')
+train_raw_df %>% tail() %>% knitr::kable(caption = 'tail)
+```
+
+intrestings.....the last row is NA. 
+
+
+
+
+
+

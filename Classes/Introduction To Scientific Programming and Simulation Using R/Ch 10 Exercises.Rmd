@@ -1,0 +1,430 @@
+---
+title: "Ch 10 Exercises"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+#Chapter 10 Excercises
+
+## 1
+
+**draw a function g(x) for which the fixed-point algorith produces the oscillating sequence 1,7,1,,7,.... when started with x0 = 7.**
+
+
+It's gonna look like a sin wave basically, or a step function f(x) = if(x >= 7 then 1, else 7)
+
+## 3
+
+**use FIXEDPOINT to find the fixed point of cos(x). Start with x0 = 0 as your inital guess (the answer is 0.73908513). Now use netonrasphson to find the root point of cos(x-x), start with x0 = 0. Is it fster than the fixed point method?**
+
+Here is fixedpint
+
+```{r}
+
+fixedpoint <- function(ftn, x0, tol = 1e-9, max.iter = 100) {
+  # applies the fixed-point algorithm to find x such that ftn(x) == x
+  # we assume that ftn is a function of a single variable
+  
+  # do first iteration
+  xold <- x0
+  xnew <- ftn(xold)
+  iter <- 1
+  cat("At iteration 1 value of x is:", xnew, "\n")
+
+  # continue iterating until stopping conditions are met
+  while ((abs(xnew-xold) > tol) && (iter < max.iter)) {
+    xold <- xnew;
+    xnew <- ftn(xold);
+    iter <- iter + 1
+    cat("At iteration", iter, "value of x is:", xnew, "\n")
+  }
+
+  # output depends on success of algorithm
+  if (abs(xnew-xold) > tol) {
+    cat("Algorithm failed to converge\n")
+    return(NULL)
+  } else {
+    cat("Algorithm converged\n")
+    return(xnew)
+  }
+}
+
+```
+ No, going to apply it to cos(x)
+ 
+ ```{r}
+ fixedpoint(cos,0)
+ ```
+ 
+ Here is Newton Rasphson method
+ 
+ ```{r}
+ newtonraphson <- function(ftn, x0, tol = 1e-9, max.iter = 100) {
+  # Newton_Raphson algorithm for solving ftn(x)[1] == 0
+  # we assume that ftn is a function of a single variable that returns
+  # the function value and the first derivative as a vector of length 2
+
+  # initialise
+  x <- x0
+  fx <- ftn(x)
+  iter <-  0
+
+  # continue iterating until stopping conditions are met
+  while ((abs(fx[1]) > tol) && (iter < max.iter)) {
+    x <- x - fx[1]/fx[2]
+    fx <- ftn(x)
+    iter <- iter + 1
+    cat("At iteration", iter, "value of x is:", x, "\n")
+  }
+
+  # output depends on success of algorithm
+  if (abs(fx[1]) > tol) {
+    cat("Algorithm failed to converge\n")
+    return(NULL)
+  } else {
+    cat("Algorithm converged\n")
+    return(x)
+  }
+}
+
+ ```
+ 
+ However, we will need to produce a function the returns the function, as well as it's derivatives
+ 
+ ```{r}
+ cos_nr = function(x){
+  f1 = cos(x) - x
+  df1 = -sin(x) - 1
+ return(c(f1,df1))
+ }
+ 
+ newtonraphson(cos_nr,0)
+ 
+ ```
+ wow...yea, that converged signficantly faster than anticipated! :P
+ 
+ 
+## 5
+
+**Below is the modification of newtonraphson that plos intermediate results, analogous to fixedpoint_shown above. use it to investiaget the roots of the following function**
+
+*a) ccos(x)-x using x0 = 1,3,6*  
+*b) log(x)-exp(-x) using x0=2*  
+*c) *$x^3-x-3$* using x0=0*  
+*d) *$x^3-7x^2+14x-8$* using x0=1.1,1.2,...,1.9*  
+*e) log(x)exp(-c) using x0 = 2*  
+
+```{r}
+newtonraphson_show <- function(ftn, x0, xmin = x0-1, xmax = x0+1) {
+  # applies Newton-Raphson to find x such that ftn(x)[1] == 0
+  # x0 is the starting point
+  # subsequent iterations are plotted in the range [xmin, xmax]
+
+  # plot the function
+  x <- seq(xmin, xmax, (xmax - xmin)/200)
+  fx <- c()
+  for (i in 1:length(x)) {
+    fx[i] <- ftn(x[i])[1]
+  }
+  plot(x, fx, type = "l", xlab = "x", ylab = "f(x)",
+    main = "zero f(x) = 0", col = "blue", lwd = 2)
+  lines(c(xmin, xmax), c(0, 0), col = "blue")
+
+  # do first iteration
+  xold <- x0
+  f.xold <- ftn(xold)
+  xnew <- xold - f.xold[1]/f.xold[2]
+  lines(c(xold, xold, xnew), c(0, f.xold[1], 0), col = "red")
+
+  # continue iterating while user types "y"
+  cat("last x value", xnew, " ")
+  continue <- readline("continue (y or n)? ") == "y"
+  while (continue) {
+    xold <- xnew;
+    f.xold <- ftn(xold)
+    xnew <- xold - f.xold[1]/f.xold[2]
+    lines(c(xold, xold, xnew), c(0, f.xold[1], 0), col = "red")
+    cat("last x value", xnew, " ")
+    continue <- readline("continue (y or n)? ") == "y"
+  }
+
+  return(xnew)
+}
+
+f_ch10_ex5_a = function(x){
+return(cos(x) - x)
+}
+
+f_ch10_ex5_b = function(x){
+return(log(x)-exp(-x))
+}
+
+f_ch10_ex5_c = function(x){
+return(x^3-x-3)
+}
+
+f_ch10_ex5_d = function(x){
+return(x^3-7*x^2+14*x-8)
+}
+
+f_ch10_ex5_e = function(x){
+return(log(x)*exp(-x))
+}
+```
+
+okay, got the newtonraphson_show up and running, and got my functions codded out, LET'S DO DISS
+
+
+####a
+```{r}
+
+newtonraphson_show(f_ch10_ex5_a,1)
+newtonraphson_show(f_ch10_ex5_a,3)
+newtonraphson_show(f_ch10_ex5_a,6)
+
+```
+
+####b
+
+```{r}
+newtonraphson_show(f_ch10_ex5_b,2)
+```
+
+####c
+
+```{r}
+newtonraphson_show(f_ch10_ex5_c,0)
+```
+####d
+```{r}
+newtonraphson_show(f_ch10_ex5_d,1.1)
+newtonraphson_show(f_ch10_ex5_d,1.2)
+newtonraphson_show(f_ch10_ex5_d,1.3)
+newtonraphson_show(f_ch10_ex5_d,1.4)
+newtonraphson_show(f_ch10_ex5_d,1.5)
+newtonraphson_show(f_ch10_ex5_d,1.6)
+newtonraphson_show(f_ch10_ex5_d,1.7)
+newtonraphson_show(f_ch10_ex5_d,1.8)
+newtonraphson_show(f_ch10_ex5_d,1.9)
+
+```
+
+####e
+
+```{r}
+newtonraphson_show(f_ch10_ex5_e,2)
+```
+
+
+
+##7
+
+**Adaptive fixed-point iteration.**
+
+**to find a root a of f we can apply the fixed-point method to g(x) = x+cf(x), where c is some non-zero constant. That is, given x- we put** $x_{n+1}=g(x_n)=x_n+cf(x_n)$
+
+**from Taylor's theorem we have**
+\[
+g(x) \approx g(a) + (x-a)g'(a)
+=a+(x-a)(a+cf'(a))
+\]
+
+**so**
+
+$g(x)-a\approx(x-a)(1+cf'(a))$
+
+**BAsed on this approximation, explain why $\frac{-1}{f'(a)}$ would be a good choice for c.**
+**In practice we don't know a so cannont find** $\frac{-1}{f'(a)}$. **AS step n of the iteration, what would be your best guess at** $\frac{-1}{f'(a)}$**? Using this guess for c, what happens to the fixed-point method?**
+
+Honestly, I'm not sure WHAT the question is asking. 
+
+Let's back into this: *a* is a root, that is. $f(a)=0$, if we assume a contious function, we have $f'(a) \in R $, so $\frac{f'(a)}{f'(a)} = 1 \in R$ thus we have $g(x)-a\approx(x-a)(1+\frac{f'(a)}{-f'(a)})=(x-a)(1-1)=(x-a)*0=0 $ which means $g(x) = a$ thus, a isn't a root!
+
+##9
+ **for f:R->R, the Newton-Raphson algorithm uses a sequence of linear approximations to f to find a root. What happens if we use quadratic approximation instead**
+ 
+ **Suppose that xn is our current approximation to f; then aquadratic approximation to f at xn is given by the second order Taylor expansion:**
+ \[
+ f(x)\approx g_n(x)=f(x_n)+(x-x_n)f'(x_n)+\frac{1}{2}(x-x_n)^2f''(x_n)
+\]
+**let** $x_{n+1}$ **be the solution of** $g_n(x)=0$ **that is closest to xn, assuming a soluton existgs. if** $g_n(x)=0$ **has no solution, then let** $x_{n+1}$ ** be the point at which gn attains either its minimum or maximum. Figure 10.5 illustrates the two cases.**
+
+**implement this algorithm in R and use it to find the fixed points of teh following functions:**
+
+*a) ccos(x)-x using x0 = 1,3,6*   
+*b) log(x)-exp(-x) using x0=2*  
+*c) *$x^3-x-3$* using x0=0*  
+*d) *$x^3-7x^2+14x-8$* using x0=1.1,1.2,...,1.9*  
+*e) log(x)exp(-c) using x0 = 2*  
+
+**for your implemntation, assume that you are given a function FTN(x) that returns the vector (f(x),f'(x),f''(x)). Given xn, if you rewrtie gn as ** $g_n(x)=a_2x^2+a_1x+a_0$ **then you can use the quadratic formula to the find the roots of gn and thus xN+1. If gn hs no roots then the min/max occur at the point g'n(x)=0**
+
+Okay,they gave me an intresting hint, so let's rework $g_n(x)$ into something usefull
+
+\[
+g_n(x) = \frac{f''(x_n)}{2} (x-x_n) + f'(x_n)(x-x_n) + f(x_n)
+
+\]
+
+let $ y = x - x_n$
+
+so now we have
+
+\[
+g_n(x) = \frac{f''(x_n)}{2} (y) + f'(x_n)(y) + f(x_n) = 0
+
+\]
+
+Now, we can use the quadritic equation
+
+\[
+y = \frac{-f'(x_n) \pm \sqrt{f'(x_n)^2 - 2f''(x_n)f(x_n)}}{f''(x_n)}
+\]
+
+and replacing y
+
+\[
+x = \frac{-f'(x_n) \pm \sqrt{f'(x_n)^2 - 2f''(x_n)f(x_n)}}{f''(x_n)} + x_n
+\]
+
+Now, to the second part, if there is no root to the above (and really, that only occures when $f''(x_n) = 0$) then we find the min/max, which is when $g'(x)=0$
+
+so
+\[g_n'(x)=\frac{d}{dx}f(x_n)+(x-x_n)f'(x_n)+\frac{1}{2}(x-x_n)^2f''(x_n)=0\]
+\[g_n'(x)=0+f'(x_n)+f''(x_n)(x-x_n)=0\]
+\[f'(x_n)+f''(x_n)x- f''(x_n)x_n=0\]
+\[f''(x_n)x =f'(x_n) + f''(x_n)x_n \]
+ Da fuck....I'll figure it out later
+
+```{r}
+ nrq <- function(ftn, x0, tol = 1e-9, max.iter = 100) {
+  # Newton_Raphson algorithm for solving ftn(x)[1] == 0
+  # we assume that ftn is a function of a single variable that returns
+  # the function value and the first derivative as a vector of length 2
+
+  # initialise
+  x <- x0
+  fx <- ftn(x)
+  delta = 1
+  iter <-  0
+
+  # continue iterating until stopping conditions are met
+  while ((abs(delta) > tol) && (iter < max.iter)) {
+    if(fx[3] == 0){
+        return(0) #haven't figured this part out yet
+    } 
+    x_p =  x + (sqrt(fx[2]^2-2*fx[3]*fx[1]) - fx[2])/fx[3]
+    x_n = x - (sqrt(fx[2]^2-2*fx[3]*fx[1]) + fx[2])/fx[3]
+    
+    delta = x - x_p
+    x = x_p
+    fx <- ftn(x)
+    iter <- iter + 1
+    cat("At iteration", iter, "value of x is:", x, "\n")
+  }
+
+  # output depends on success of algorithm
+  if (abs(fx[1]) > tol) {
+    cat("Algorithm failed to converge\n")
+    return(NULL)
+  } else {
+    cat("Algorithm converged\n")
+    return(x)
+  }
+}
+
+
+f_ch10_ex9_a = function(x){
+return(c(cos(x) - x, -sin(x), -cos(x)))
+}
+
+f_ch10_ex9_b = function(x){
+return(c(log(x)-exp(-x), 1/x + exp(-x), 1/(2*x^(3/2)) - exp(-x)))
+}
+
+f_ch10_ex9_c = function(x){
+return( c(x^3-x-3, 3*x^2-1,6*x) )
+}
+
+f_ch10_ex9_d = function(x){
+return(c(x^3-7*x^2+14*x-8, 3*x^2-14*x + 8, 6*x-14  ) )
+}
+
+f_ch10_ex9_e = function(x){
+return(c(log(x)*exp(-x),(exp(-x)(1-x*log(x))/x),1)) #don't feel like figureing out these derivates
+}
+
+```
+
+
+####a
+```{r}
+
+nrq(f_ch10_ex9_a,1)
+nrq(f_ch10_ex9_a,3)
+nrq(f_ch10_ex9_a,6)
+
+```
+
+####b
+
+```{r}
+nrq(f_ch10_ex9_b,2)
+```
+
+####c
+
+```{r}
+nrq(f_ch10_ex9_c,0)
+```
+####d
+```{r}
+nrq(f_ch10_ex9_d,1.1)
+nrq(f_ch10_ex9_d,1.2)
+nrq(f_ch10_ex9_d,1.3)
+nrq(f_ch10_ex9_d,1.4)
+nrq(f_ch10_ex9_d,1.5)
+nrq(f_ch10_ex9_d,1.6)
+nrq(f_ch10_ex9_d,1.7)
+nrq(f_ch10_ex9_d,1.8)
+nrq(f_ch10_ex9_d,1.9)
+
+```
+
+####e
+
+```{r}
+nrq(f_ch10_ex9_e,2)
+```
+
+
+
+
+**How does this algorithm compare to the Newton-Raphoson algorithem, or to Halley's method (ex 11)**
+
+```{r}
+NR_quad = function(fn, x0, tol = 1e-9, max.iter=100){
+  
+  
+}
+
+```
+
+
+##11
+
+**The astronomer Edmund Halley devised a root finding method faster than the Newton-Raphson method, but which requires second derivative infromation. if xn is our current solution then:**
+\[
+x_{n+1}=x_n - \frac{f(x_n)}{f'(x_n)-(\frac{f(x_n)f''(x_n)}{2f'(x_n)})}
+\]
+
+**let m be the postiive integer. Show that applying Halley's method to the function** $f(x)=x^m-k$ **gives**
+\[
+x_{n+1} = \frac{(m-1)x^m_n + (m+1)k}{(m+1)x^m_n + (m-1)k}x_n 
+\]
+
+**use this to show that, to 0 decimal places, ** $59^{\frac{1}{7}}$**=1.790518691**
+

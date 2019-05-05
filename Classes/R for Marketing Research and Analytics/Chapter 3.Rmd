@@ -1,0 +1,275 @@
+---
+title: "Ch.3 Describnig Data"
+output: html_document
+---
+
+#Chapter 3: Describing Data
+
+##building the base dataset
+
+we are going to be building a base dat aset,
+```{r}
+## there will be 20 stores
+k.stores = 20
+##with two years worth of dat
+k.weeks = 104
+
+###creating the base data frame
+store.df = data.frame(matrix(NA, ncol = 10, nrow = k.stores*k.weeks))
+###naming the files
+names(store.df) = c("store_nbr", "Yr","Wk","p1_sales", "p2_sales","p1_price","p2_price", "p1_prom","p2_prom", "country")
+
+
+dim(store.df)
+head(store.df)
+tail(store.df)
+```
+
+as you can see, most of the data is empty in this data frame, let's populating the store number and the country code
+
+```{r}
+store.num = 1:k.stores
+store.cty = c(rep('US',3),
+							rep("DE",5),
+							rep("GB",3),
+							rep("BR",2),
+							rep("JP",4),
+							rep("AU",1),
+							rep("CN",2))
+
+store.df$store_nbr = rep(store.num, each = k.weeks)
+store.df$country = rep(store.cty, each = k.weeks)
+
+store.df$store_nbr = factor(store.df$store_nbr)
+store.df$country = factor(store.df$country)
+
+
+
+head(store.df)
+tail(store.df)
+```
+
+Now week and Year
+
+```{r}
+store.df$Wk = rep(1:52, times = k.stores*2)
+store.df$Yr = rep(rep(1:2, each = k.weeks/2), times = k.stores)
+
+head(store.df)
+tail(store.df)
+```
+
+Now that all predetermined factors have been populated, lets create some random price and promotion deatils
+
+```{r}
+set.seed(98250)
+
+store.df$p1_prom = rbinom(n=nrow(store.df), size =1, p = 0.1) #10% get promoted
+store.df$p2_prom = rbinom(n=nrow(store.df), size = 1, p = 0.15) #15% get promotions
+
+###prices are randomly drawn from five diffrent buckets
+
+store.df$p1_price = sample(x=c(2.19,2.29,2.49,2.79,2.99), size = nrow(store.df), replace = T)
+store.df$p2_price = sample(x = c(2.29,2.49,2.59,2.99,3.19), size = nrow(store.df), replace = T)
+
+head(store.df)
+tail(store.df)
+```
+
+Now generating some sales data, but we are going to base it on the number of items bought first. So we are using a poisson disributios to determine how many units were bought. from there we will determine the total sales based on the log ratio of the item price!
+
+Then we are going to assume a certain amount of lift for promotions
+
+```{r}
+store.df$p1_sales = rpois(nrow(store.df), lambda = 120) * log(store.df$p2_price)/log(store.df$p1_price)
+store.df$p2_sales = rpois(nrow(store.df), lambda = 100) * log(store.df$p1_price)/log(store.df$p2_price)
+
+store.df$p1_sales = floor(store.df$p1_sales * (1 + store.df$p1_prom * 0.3)) #30% lift
+store.df$p2_sales = floor(store.df$p2_sales * (1 + store.df$p2_prom * 0.4)) #40% lift
+
+head(store.df)
+tail(store.df)
+
+require(car)
+some(store.df, 10) #randomly samples 10 records
+```
+
+
+###Summary
+
+okay, so what did we do:
+
+1) we first created a dataframe that consists of 10 columns, and assumed that there were 20 stores, with data for each week for 2 years (20 stores x 52 weeks per store x 2 years per week) = 2080 rows of per data frame
+2) then we created a store number (1 ~ 20) and populated for each week 
+and generated country codes per stores 
+3) similary genereated year and weeks 
+4) we generated a binomail distrubion of IF there was a promotion, then randoml sampled from five price points for each product
+5) now this gets trick, we created sales data and we did this in three steps
+5.1) we generated a count of sales per week (using a poisson distribution)
+5.2) multiple by the inverse log ratio of the price point. The reason for this was so if the other item had a higher price, then this items would sell just slightly more...just slightly (remeber, it's the log ratio, not the ratio)
+5.3) if there was a promotion, it lifted sales by 30 or 40% and this gave us the number of items sold!
+
+## Summarizing dat
+
+lets take a look at some basic frequency counts
+
+```{r}
+table(store.df$p1_price)
+
+t1 = table(store.df$p1_price)
+
+plot(t1)
+
+#### for two variables frequency counts at a time 
+table(store.df$p1_price, store.df$p1_prom)
+
+t2 = table(store.df$p1_price, store.df$p1_prom)
+
+t2[,2]/(rowSums(t2))
+
+plot(t2)
+
+```
+
+so, what happens if the variable is continues, well...we got some nice functions for that. Generally speaking (and this is c talking) I love to use the summary command
+
+```{r}
+min(store.df$p1_sales)
+max(store.df$p2_sales)
+mean(store.df$p1_prom)
+median(store.df$p2_sales)
+var(store.df$p1_sales)
+sd(store.df$p1_sales)
+IQR(store.df$p1_sales)
+mad(store.df$p1_sales)
+quantile(store.df$p1_sales, probs = seq(0.1, 1, by =0.1))
+
+summary(store.df)
+
+
+summary(store.df, digits = 2) #cool litte feature to keep 2 SIGNIFICANT digits, not two digits after the decimal
+```
+
+that is from the base package, which is nice, but the psych package has something intresting
+
+```{r}
+
+require(psych)
+
+describe(store.df)
+```
+
+pretty cool eh:
+
+###recommend approach to instpecting data
+1) import data
+2) convert to df
+3) look at the diminesions by dim()
+4) use head() and tail() to investigate the data, generally this is where errors may show up
+5) use some() from the car package to randomly investiage rows
+6) use str() to check the data structure
+7) use summary() and descrip() (from the psych package)
+
+## visualizing data
+
+okay, the easast way to see datat is to look at it. for single variables, a histogram is a great tool
+
+```{r}
+
+hist(store.df$p1_sales,        #the variable in questions
+		 main = "Product 1 weekly sales frequency, all stores",
+		 xlab = "Product 1 sales (units)",
+		 ylab = "Relative frequency",
+		 breaks = 30, #we want 30 buclets
+		 col = "lightblue",
+		 freq = F, #we don't want counts
+		 xaxt = "n"
+)
+
+axis(side = 1, at = seq(60, 300, by =20)) ##adding the right tick marks
+
+lines(density(store.df$p1_sales, bw = 5), type = "l", col = "darkred", lwd = 2)
+```
+
+as well as boxplot to measure a category and contiious variables together
+
+```{r}
+
+boxplot(store.df$p2_sales ~ store.df$store_nbr,
+				horizontal = T,
+				ylab = "Store",
+				xlab = "Weekly unit sales",
+				las = 1,
+				main = "Weekly Sales of p2 store")
+
+
+
+boxplot(p2_sales ~ p1_prom,
+				data = store.df,
+				horizontal = T,
+				yaxt = "n",
+				ylab = "p2 promoted in stores?",
+				xlab = "Weekly Sales",
+				main = "Weekly sales of p2 with and without promotion")
+
+axis(side = 2, at = c(1,2), labels = c("No","yes"))
+		 
+		 
+		 
+```
+
+if we want to see the normality of the data, we can use a QQ plot
+
+```{r}
+
+qqnorm(store.df$p1_sales)
+qqline(store.df$p1_sales)
+
+# the upward corve is a given for ahighly sckewed adta
+
+qqnorm(log(store.df$p1_sales))
+qqline(log(store.df$p1_sales))
+
+```
+
+
+we can also use a empirical cumulative distribution function to view univarite data :D
+
+```{r}
+
+plot(ecdf(store.df$p1_sales),
+		 main = "Cumulative distribution of P1 Weekly Sales",
+		 ylab = "Cumulative propotion",
+		 xlab = c("p1 weekly sales, all stores", "90% of weeks sold <= 171 unites"),
+		 yaxt = "n")
+
+axis(side = 2,
+		 at = seq(0, 1, by = 0.1),
+		 las = 1,
+		 labels = paste(seq(0,100, by = 10), "%", sep = ""))
+
+abline(h = 0.9, lty = 3) #h is for horizon at the 90th percentile
+abline (v = quantile(store.df$p1_sales))
+```
+
+
+lets see a really cool map plot
+
+```{r}
+
+require(rworldmap)
+require(RColorBrewer)
+
+p1_sales.sum = aggregate(store.df$p1_sales, by = list(country = store.df$country), sum)
+
+#first we need to create a map ite
+p1_sales.map = joinCountryData2Map(p1_sales.sum, joinCode = "ISO2", nameJoinColumn = "country")
+
+#now we can plot
+
+mapCountryData(p1_sales.map,
+							 nameColumnToPlot = "x",
+							 mapTitle = "Toatl P1 sales by Country",
+							 colourPalette = brewer.pal(7, "Greens"),
+							 catMethod = "fixedWodth",
+							 addLegend = F)

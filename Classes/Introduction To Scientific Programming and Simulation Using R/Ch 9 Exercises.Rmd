@@ -1,0 +1,132 @@
+---
+title: "Ch 9 Excercises"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+#Chapter 9 Excercises
+
+## 1
+
+**Write a program to calculate the binary expansion of 1.1 to say, 20 binary placesS**
+
+```{r}
+
+convert_to_binary <- function(n) {
+    if(n > 1) {
+        convert_to_binary(as.integer(n/2))
+    }
+    cat(n %% 2)
+}
+
+```
+
+## 3
+ **What is the relative error in approximating $\pi$ by 22/7? What about $\frac{355}{113}$?**
+ 
+ Okay, so we are clear:  
+ \[
+ Absolute Error = |\hat{a} - a|
+ \]
+ 
+ and  
+ 
+ \[
+ Relative Error = \frac{|\hat{a} - a|}{a}
+ \]
+ 
+ ```{r}
+ 
+ abs(22/7 - pi)/pi
+ 
+ abs(355/113 - pi)/pi
+ ```
+ 
+ ## 5
+ ** Consider the function $f(x)=\sqrt{x+1}-1$. Assume that we have agood implementation of square roos, so that if $y=\sqrt{x}$ then the relative error in $\sqrt{x}$ is no bigger than the relative error in x or y. ths is, $\sqrt{x}$ can be computed as accuractly as is possible,given the shceme we are using for representing numbers on the computer**
+ 
+ *a) using double precision, roughly how accurately can a computer calculate f(1)? Give the aboslute and relative error*
+ 
+ so it's double precisoin, etc e^-16 is about the , however,we know that the true answers is 2 so, but we are only
+ # as accruate as e^16 so a_hat - a = e^16. Ergo, absolute error and relative error roughly e^-16
+ 
+ *b) Using double precision, roughly how accurately cna a computer calcluate f(10^-6)? Give abosluate and relative error*
+ 
+ Okay, slightly diffrent story, true y is 0.001001, and again, the absolute diffrence is roughly e^-16. However, the relative error is e^-16/0.001001 = e^-13, though, I feel like it should be e^-10
+ 
+ *c) Using two term Taylor expansion, suggest an approxamtion f(x) that will be more accurate for small x?*
+ 
+ ## 7
+ 
+ ** To calclulate log(x) we use th eexpansion:**  
+ \[
+ log(1 + x) = x - \frac{x^{2}}{2} + \frac{x^{3}}{3} - \frac{x^{4}}{4} + \dots
+ \]
+ **Truncating to N terms. The error is no greater in magnitude than the last term in the sum. How many terms in the expansion are requred to calclulate log(1.5) with an error fo AT MOST e-16. How many terms are requried to calculate log 2 with an error of at most e-16**
+ 
+ Okay, this at first stumped me, but I figured it out. First thing we want to is refactor log(1.5) to be in a form of log(1+x)
+ SO, if we make x = 0.5, then we have log(1 + 0.5) = log(1.5) WOOT WOOT
+ 
+ Now, next step is to calculate each term until we hit e-16 with x = 0.5
+ 
+ ```{r}
+ x = 2:50
+ 
+sapply(x, function(x) (0.5^(x))/x)
+ 
+```
+ 
+ gads, that was a lot of terms, so we want an error that is AT MOST e-16 so we are llooking at...between 44 and 46 terms
+ 
+ Now, if x = 2, we do the same refactor (but in this case x = 1) so....in this case you need to go out a good e16 terms.
+ 
+ 
+ ## 9
+ 
+ **the Sample variance of a set of obsercation x1,.....xn is given by:**
+ \[
+ 
+ S^{2}=\sum_{i=1}^{n}\frac{{(x_i - \hat{x_i}})^2}{(n-1)} = \frac{\sum_{i=1}^{n}{x_i^2 - n\hat{x_i}}^2}{(n-1)}
+ \]
+ 
+ **Show that the second formula si more efficient (requires fewere operations) but can suffer from catastrophic cancellation. Demonstrate catastrophic cancellation with an example sample size of n = 2** Woof....okay this ins't going to be easy. Wait, no it is.
+ 
+ Basically speaking (n-1) is the same operation on both so we can get ride of it. Now, the LHS requires 4 operations per itteration{ Square the x, square the mean, and subtract, then square the total}, which yields 4n operations in total.
+ 
+ No, the right hand side requires n opperations per itteration (squareing the X), then an addition three operations (square the mean, times it by n, and subtract it from the sigma) so we have n+3 operations.
+ 
+ Now, we can have catastrophic cancellation for the reason given on p 166 (it's a cop out, SO WHAt)
+ 
+ ## 11
+  **How many multiplcatiosn/division are performed by the following code, as a function of n?**
+  
+  x = 2  
+  s = 1  
+  for (k in 1:n){  
+    t =1  
+    for (j in 1:k){  
+      t = t*j  
+    }  
+    s =s + x^k/t  
+  }  
+  
+  **suggest a way of making the code more efficent.?**
+  k opperations are performaed for:
+    for (j in 1:k){
+      t = t*j
+    }
+  
+  and that is done for each value of n, so we now have $\sum_{i=1}^{n}k$ 
+   in addition, we need to raise x to k and divied it by t, which I'm gonna assume x^t is one operations. so we have
+  $\sum_{i=1}^{n}k + 2n$
+  
+  an easy way to simplyfy the code is create a vector t, such that t[1] is t*j, then t[2] = t[1]xj, so that that vector is predifined. so all you have to do is walk down the index of the vector
+  
+  
+ 
+ 
+ 
+ 

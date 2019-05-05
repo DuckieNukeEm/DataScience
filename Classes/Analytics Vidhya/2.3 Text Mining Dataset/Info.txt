@@ -1,0 +1,20 @@
+Here is the site I found for it:
+https://www.analyticsvidhya.com/blog/2018/05/24-ultimate-data-science-projects-to-boost-your-knowledge-and-skills/
+
+Here is a link to a better source of it:
+https://c3.nasa.gov/dashlink/resources/138/
+
+Here is along some more information becuase the fucking website is gone!!!!
+https://c3.nasa.gov/dashlink/static/media/dataset/Contest_Description_and_Rules.pdf
+
+
+
+Here is a link to the data:
+https://www.csie.ntu.edu.tw/~cjlin/libsvmtools/datasets/multilabel.html#siam-competition2007
+
+
+and a file to help:
+https://wtlab.um.ac.ir/images/e-library/text_mining/Survey%20of%20Text%20Mining%202%20.pdf
+
+
+it's a god damn PDF GRRRRR

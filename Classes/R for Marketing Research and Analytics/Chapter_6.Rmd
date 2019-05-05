@@ -1,0 +1,177 @@
+---
+title: 'Ch.6 Comparing Groups: Statistical Test'
+output: html_document
+---
+
+# Ch.6 Comparing Groups: Statistical Test
+
+###Bruilding the base dataset
+
+Well, I don't feel like building this base data set so I'm joint going to download it
+
+```{r}
+seg.df = read.csv("http://goo.gl/qw303p")
+
+summary(seg.df)
+
+library(psych)
+describe(seg.df)
+```
+
+###Chi-sqrd test
+
+The Chi-sqrd test measure of categorical variables are independent. That is, if they are independent, then their distribution among the categorical variables should be equal to their expected value. Said another way, we are actually testing the following:
+\[ 
+(Observed - Expected)^2/Expected
+\]
+with
+\[ (row - 1)\times(col - 1) \] degrees of freedom in a chiSqrd distribution
+
+The null hypothesis being that the observed doesn't deviate from the expected. However, if it does, and with enough significance, then we know that their IS a relationship between the categorical variables. TO see this in action, lets consider the the segment population. We want to see if their is a significant difference in size of the segment in our data set:
+
+```{r}
+chisq.test(table(seg.df$Segment))
+```
+
+With such a p-value, this tells use that the observed values are different from the expected values. Recall, that if everything was random, we would expect a roughly equal count among each of the segment groups, but this is saying their ISN'T an equal count.
+
+So, let's take a look at comparing two groups, say how does subscription and if people own their own homes relate?
+
+```{r}
+table(seg.df$subscribe, seg.df$ownHome)
+
+chisq.test(table(seg.df$subscribe, seg.df$ownHome))
+```
+
+Woof, that's a...uh....very high p-value. Which means we do not have enough information to reject the null hypothesis
+
+Now, we do need to stress that R is doing a **Yates correct** automatically, which is adjusting for the fact that the data may not be coming from a continuous binomial distribution. To turn it off, all ya needs is to add __correct = FALSE__ to chisq.test(). Furthermore, you can actually generate a confidence interval about p value but running repeated test against tables. In this case __sim=TRUE__ and __B=N__ (N being some number) is added
+
+```{r}
+chisq.test(table(seg.df$subscribe, seg.df$ownHome), correct = F)
+
+chisq.test(table(seg.df$subscribe, seg.df$ownHome), sim = TRUE, B = 10000)
+```
+
+In both cases, it still confirms that there is no significant interactions between subscirbers and if they own a home or not
+
+###binom.test()
+from wikipedia: 
+
+> In statistics, the binomial test is an exact test of the statistical significance of deviations from a theoretically expected distribution of observations into two categories
+
+So, what is this saying? If we see a propotion between two items. Say, we see 12 hot dogs and 8 burgers (with the choice being only hot dog or burgers), then is the 8/20 signifincantly diffrent from what we WOULD expect if we randomly sampled them (which, we WOULD expect to be around 50%)
+
+Now, this DOESN'T HAVE TO BE set at 50%, if we expect the ratio TO BE 80% hot dog to burgers, then we can test at that ratio too!
+
+For som odd reason, the author doesn't have any marketing data, so we will just have to work off the hot dog burger example above.
+
+so, is 12 hot dogs out of 20 "meals" (With an expected odds of 50%) significant?
+
+```{r}
+binom.test(12,20,  p = 0.5)
+```
+
+Wow, there is a lot there, so let's break this down, starting from the bottum. The confidence interval is roughly 0.36 to 0.80, which means that we expect that that 95% of our draws will fall within that ratio. Okay, so what? well notice that 0.5 (our 50%) is within that confidence interval. 
+
+Also, the p-value os 0.5034, which means there is not enough evidence to reject the null hypothis, ergo, in our sample of 12 hot dogs, it's not signifcanntly diffrent from the 50% split we would expect.
+
+However, recall that statistical test are sensitive to the number of observations, so let's inflate it from 12 to 120, and from 20 to 200 and see what happens
+
+```{r}
+binom.test(120,200, p =0.5)
+```
+
+awwww SNAP! Not only is our 50% probibilty outside of the confidence interval, but our p-value is signficant as well. Meaning that those 120 hot dog didn't just happen randomly.
+
+###t-test
+
+so what if we want to see if the sample means of two groups are diffrent? For example, is their a diffrence in income between those who own their home and those who don't? A t-test will tell us that!
+
+```{r}
+t.test(income ~ ownHome, data = seg.df)
+```
+
+okay, the p-vaule tells us there is asignificant diffrence between the income of those two groups, (As you can see from the sample estimated means at the bottum) and that the CI says their DIFFRENCE is between -12,090 and -3,007
+
+if we turn now and look at JUST the travelers segement...
+
+```{r}
+t.test(income ~ ownHome, data = subset(seg.df, Segment == "Travelers"))
+```
+
+yea....those hippies who travel and odn't travel don't have much diffrence in their income (with the p value being relaly high, and zero being in the CI)
+
+Wait...so if their is no diffrence in income for the travelers group and owning thier home, but the larger population does show a diffrence...then where does that diffrence lie???
+
+We could run through all segment and test each one indivdually, or we could use ANOVA
+
+###ANOVA
+
+Again from Wikipedia: 
+
+> Analysis of variance (ANOVA) is a collection of statistical models used to analyze the differences among group means and their associated procedures (such as "variation" among and between groups), developed by statistician and evolutionary biologist Ronald Fisher. In the ANOVA setting, the observed variance in a particular variable is partitioned into components attributable to different sources of variation. In its simplest form, ANOVA provides a statistical test of whether or not the means of several groups are equal, and therefore generalizes the t-test to more than two groups. It is conceptually similar to multiple two-sample t-tests, but is more conservative (results in less type I error) and is therefore suited to a wide range of practical problems.
+
+
+okay, you really need to dig into this and understand ANOVA, (and her hot, but kind of slutty sister MANOVA)
+In R, you have to do two steps. first craete the ANOVA object with _aov(formula, data)_ then run the test on it using _anove()_
+
+becuase, this is conceptially similar to t-test, it's easy to interpert
+
+```{r}
+seg.aov.own = aov(income ~ ownHome, data = seg.df)
+anova(seg.aov.own)
+```
+
+awww snap, the p value is tiny, telling use that their is significant variation in income between those who do and do not own thier own homes.
+
+What about segment?
+
+```{r}
+seg.aov.seg = aov(income ~ Segment, data = seg.df)
+anova(seg.aov.seg)
+```
+
+AWWW SHIT, the p-value is really tiny, meaning their also is signficant variation in their income between the segements. 
+
+wait wait wait....so which one explains the diffrence better???? lets toss 'em into the model and see
+
+```{r}
+anova(aov(income ~ Segment + ownHome, data = seg.df))
+```
+
+intresting....Segment explains most of the variation (via the tiny p value) but ownHome adds little above and beyond what segments says....maybe thier is an interactions in the terms??? Hrmmm?
+
+```{r}
+anova(aov(income ~ Segment*ownHome, data = seg.df))
+```
+
+eh...no, no interaction happenin there.
+
+So, should we still included the ownHome variable to get a better model. This is where anova can tell us if one is better than the other
+
+```{r}
+anova(aov(income ~ Segment, data = seg.df),
+      aov(income ~ Segment + ownHome, data = seg.df))
+```
+
+there isn't a significant diffrence between the two models, so keep everything simple, let's just stick with the simple model :D
+
+BUt....what about the other variables? Do we need to test every one of them? nope, we can have R do that for us by using the step function: (this isn't a panacea, and must be used with cation!)
+
+```{r}
+seg.aov.step = step(aov(income ~., data = seg.df))
+
+anova(seg.aov.step)
+```
+
+OKay, coooooooooooool (I'm gettinga little tired of working this chapter) so I'm gonna wrap up. We can visualize the diffrecne in means as follows
+
+```{r}
+seg.aov = aov(income ~ -1 + Segment, data = seg.df) #the -1 removes the intercept
+library(multcomp)
+glht(seg.aov)
+
+par(mar=c(6,10,2,2))
+plot(glht(seg.aov), xlab = "Income")
+```

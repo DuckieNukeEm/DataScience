@@ -1,0 +1,42 @@
+---
+title: "Grey Goose Sales"
+output: word_document
+---
+###Serving our Customers Better
+We produce Grey Goose Vodka, the top super premium vodka brand in the United States. In being a super premium brand, our customer service should reflect this consideration by providing the right amount of merchandise for each of our retail sellers.
+
+By looking at the stores in which Grey Goose is sold, we can clearly see there are five category of stores to cater to.
+
+```{r, echo = F}
+options(warn=-1)
+gg <- read.csv("c:/scripts/GreyGoose.csv")
+ggsales <- data.frame(aggregate(gg$TotalSales, by = list(gg$Store), FUN = sd)$x, aggregate(gg$TotalSales, by = list(gg$Store), FUN = mean))
+names(ggsales) <- c("VarofSales","Store","AverageSold")
+ggslesscale <- scale(ggsales[,-2])
+ggdist <- dist(ggsales)
+gghclust <- hclust(ggdist, method = "ward.D")
+#plot(gghclust)
+ggsales$Group <- cutree(gghclust, k = 5)
+plot(log(VarofSales,10)~AverageSold, data = ggsales, col = Group, xlab = "Average Sales", ylab = "Log of the Varabilty of Sales", main = "Retail Groupings")
+t<-aggregate(.~Group, data=ggsales[,-2], FUN = mean)
+t$Group <- c("Small and Variable","Small and Steady","Large and Steady","Large and Variable","Whales")
+t[,c(3,2,1)]
+```
+
+We need to focus on groups 1,4 and most importantly, 5.  
+
+Concurrently, there seems to be no pattern to the seasonality of our Vodka. Do note that the abnormally high horizontal steak is our Group 5 Retailers from above.  
+
+```{r, echo = F}
+
+#gg <- read.csv("c:/scripts/GreyGoose.csv")
+gg$Date <- as.Date(gg$Date)
+gg$Month <- format(gg$Date, '%m')
+#plot(gg$TotalSales~gg$Date, data = gg, col = Month, xlab = "Date", ylab = "Total Sales", main = "Total Sales by Day")
+```
+  
+Crunching the numbers, we should aim for a higher production of Grey Goose Vodka during the following months: January,June, and October
+```{r, echo = F} 
+#summary(lm(gg$TotalSales~gg$Month, data = gg))
+options(warn=0)
+```

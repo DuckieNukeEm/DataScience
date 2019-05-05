@@ -1,0 +1,191 @@
+---
+<<<<<<< HEAD
+title: "Ch 17 Exercises"
+=======
+title: "Ch 17 Excercises"
+>>>>>>> b5b74044d14ad1d6f7f0be023f6c2f651f764215
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+<<<<<<< HEAD
+#Chapter 17 Excercises
+
+## 1
+
+**A random variable U has a U(a, b) distribution if P(U ∈ (u, v)) = (v −u)/(b − a) for all a ≤ u ≤ v ≤ b. Show that if U ∼ U(a, b) then so is a + b − U**
+
+I don't understand teh question at all!
+
+## 3
+
+**The time to failure of a new type of light bulb is thought to have an exponential distribution. Reliability is defined as the probability that an article will not have failed by a specified time. If the reliability of this type of light bulb at 10.5 weeks is 0.9, find the reliability at 10 weeks.**  
+
+so p(X = 10.5 weeks) = 0.9
+0.9 = e^(-y10.5)
+ln(0.9)  = -10.5y
+y = ln(0.9)/10.5
+
+so p(x = 10) = e^(-(ln(0.9)/-10.5) x 10 ) = `r exp(-(log(0.9)/-10.5)*10)`
+
+**One hundred bulbs of this type are put in a new shop. All the bulbs that have failed are replaced at 20-week intervals and none are replaced at other times. If R is the number of bulbs that have to be replaced at the end of the first interval, find the mean and variance of R.**  
+
+Probability of the surival rate in 20 weeks = `r 1-exp(-(log(0.9)/-10.5)*20)` so....x 100 = `r 100-exp(-(log(0.9)/-10.5)*20)*100`
+which is the expected outcome
+
+similary for var, it's 1/y^2 so 100 x 1/y^2 thus `r 1/(1-exp(-(log(0.9)/-10.5)*20))^2 * 100`
+
+**Explain why this result will hold for any such interval and not just the first.**
+
+it's invariant over time, so regardless of the time frame, it will be the same
+
+## 5
+**A man travels to work by train and bus. His train is due to arrive at 08:45 and the bus he hopes to catch is due to leave at 08:48. The time of arrival of the train has a normal distribution with mean 08:44 and standard deviation three mins; the departure time of the bus is independently normally distributed with mean 08:50 and standard deviation one minute. Calculate the probabilities that:** 
+
+**• The train is late:**
+
+P(X >= 8:50) = 1 - p(X <= 850) `r 1 - pnorm(850, mean = 848, sd = 3)`
+**• The bus departs before the train arrives;  **  
+Bus = 8:48 
+Train = 8:45
+
+bus - train = 8:48 - 8:44 = 4
+ub - ut =  2
+
+so we need the delta to be negative!
+
+so u = 4, sd = 2,
+
+pnorm(0, mean = 4, sd = 2) = `r pnorm(0, mean = 4, sd = 2)`
+
+**• In a period of five days there are at least three days on which the bus departs before the train arrives.  **   
+
+??
+
+## 7 
+
+**A mechanical component is only usable if its length is between 3.8 cm and 4.2 cm. It is observed that on average 7% are rejected as undersized, and 7% are rejected oversized. Assuming the lengths are normally distributed, find the mean and standard deviation of the distribution. **  
+
+so  size < 3.8cm is 70% probabilty, and becuase it's normally deistrubted, u = (3.8 + 4.2) / 2 = `r (3.8 + 4.2) / 2`
+
+backing into the sd,we get it to be roughly .107cm
+
+## 9
+
+**Glass sheets have faults called ‘seeds’, which occur in accordance with a Poisson process at a rate of 0.4 per square metre. Find the probability that rectangular sheets of glass of dimensions 2.5 metres by 1 metre will contain:**  
+
+**(a). No seeds.**  
+((0.4)x2.5 meters sqr)^2 / 0! x e^(-0.4 x 2.5) = 0.367
+
+**(b). More than one seed.**  
+
+ 1 - (((0.4)x2.5 )^ x  exp(-0.4 x 2.5) + ((0.4)x2.5 )^2 x  exp(-0.4 x 2.5)) = 0.2642411
+
+**If sheets with more than one seed are rejected, find the probability that in a batch of 10 sheets, at most one is rejected.**  
+
+So, more the probabilty of more than one defeact is detected is 0.264, so 
+1 - probabilty none oare rejected so 1 pbinom(1,10,0.264) = 0.95
+
+## 11
+
+**We examine blood under a microscope for red blood cell deficiency, using a small fixed volume that will contain on the average five red cells for a normal person. What is the probability that a specimen from a normal person will contain only two red cells or fewer (assume that cells are independently and uniformly distributed throughout the volume)?**
+ punif(2,0,10) (The average is 5, so we can't have less than zero ergo max is 10)
+ which yields 0.2
+## 13
+
+**The time (in hours) until failure of a transistor is a random variable T ∼ exp(1/100).**  
+
+**(a). Find P(T > 10).**  
+e ^ (- 1/00 x 10) = `r exp(-1/100 *10)`
+**(b). Find P(T > 100).**  
+e ^ (- 1/00 x 100) = `r exp(-1)`
+**(c). It is observed that after 90 hours the transistor is still working. Find the conditional probability that T > 100, that is, P(T > 100 | T > 90). How does this compare with part (a)? Explain this result.**
+
+
+It will be the same becuase it's memoryless! so `r exp(-1/100 * 10)`
+=======
+
+# Chapter 17 excercises
+
+## 1
+**Using a normal approximation, find the probability that a Poisson variable with mean 20 takes the value 20. Compare this with the true value; to how many decimal places do they agree?**
+
+to approx pois with a normal, we just set $\sigma = \lambda, \mu = \lambda$
+
+```{r}
+pnorm(20, mean = 20, sd = 20)
+ppois(20, lambda = 20)
+```
+
+## 3
+**The weights of 20 people are measured, and the resulting sample mean and sample standard deviation are**   
+x = 71.2 kg, s = 4.9 kg.
+**Calculate a 95% CI for the mean µ of the underlying population. Assume that the weights are iid normal.**  
+CI = $(\overline{X} - 1.96\frac{S}{\sqrt{n}}, \overline{X} + 1.96\frac{S}{\sqrt{n}}) $
+
+so =  $(71.2 - 1.96\frac{4.9}{\sqrt{20}}, 71.2 + 1.96\frac{4.9}{\sqrt{20}}) $
+so = (69.05, 73.34)
+
+## 5
+**Assume a manager is using the sample proportion** $\hat{p}$ **to estimate the proportion p of a new shipment of computer chips that are defective. He doesn’t know p for this shipment, but in previous shipments it has been close to 0.01, that is 1% of chips have been defective.**
+
+**a) If the manager wants the standard deviation of** $\hat{p}$ **to be about 0.02, how large a sample should she take based on the assumption that the rate of defectives has not changed dramatically?**
+
+This is a binomail distirbution
+okay, from before, we know the SD is:  
+
+$\sigma = n\hat{p}(1-\hat{p}) = \sqrt{\frac{\frac{X}{n}(1 - \frac{X}{n})}{n}}$
+
+so $0.02 = \sqrt{\frac{(0.01)(0.99)}{n}}$  
+so $0.0004 = \frac{(0.01)(0.99)}{n} =  \frac{0.0099}{n}  $
+so $n = 25 $
+
+**b) Now suppose something went wrong with the production run and the actual proportion of defectives in the shipment is 0.3, that is 30% are defective. Now what would be the actual standard deviation of** $\hat{p}$ **for the sample size you choose in (a)?**
+
+just putting $\sigma = \sqrt{\frac{0.3 * 0.7}{25} } = 0.9165151$
+
+## 7
+
+**The number of accidents per week at a hazardous intersection follows a Poisson distribution with mean 2.2. We observe the intersection for a full year (52 weeks) and calculate** $\overline{X}$ **the mean number of accidents per week.**
+
+**(a). What is the approximate distribution of** $\overline{X}$ **according to the Central Limit Theorem?**  
+
+N(2.2,2.2)
+
+**(b). What is the approximate probability that** $\overline{X}$ **is less than 2?**  
+
+$\overline{X} = pnorm(2,2.2,2.2) = 0.4637824  $
+
+**(c). What is the approximate distribution of T, the total number of accidents in the year?**   
+
+n(2.2, 2.2/52) 
+
+**(d). What is the probability that there are fewer than 90 accidents at the intersection during the year?** 
+
+1
+
+## 9
+**An actuary has received notification that 100 claims on an account have been filed but are still in the course of settlement. The actuary has been asked to determine the size of an appropriate reserve fund for these 100 claims. Claim sizes are independent and exponentially distributed with mean \$300. The actuary recommends setting up a claim reserve of \$31,000. What is the probability that the total claims will exceed the reserve fund?**
+
+**Hint: use an appropriate approximation.**
+
+
+## 11
+
+**Approximate the probability that the proportion of heads obtained will be between 0.50 and 0.52 when a fair coin is tossed**  
+
+**(a). 50 times.**   
+So, binomail is approx N(np/n,sqrt(p(1-p)/n))
+
+p = 0.5
+sqrt((p x (1-p) / n)) = 0.07071068
+pnorm(0.52, 0.5, 0.07071068) -  pnorm(0.50, 0.5, 0.07071068) =  0.1113513
+**(b). 500 times.**  
+
+p = 0.5
+sqrt((p x (1-p) / n)) = 0.02236068
+
+pnorm(0.52, 0.5, 0.02236068) -  pnorm(0.50, 0.5, 0.02236068) =  0.3144533
+>>>>>>> b5b74044d14ad1d6f7f0be023f6c2f651f764215

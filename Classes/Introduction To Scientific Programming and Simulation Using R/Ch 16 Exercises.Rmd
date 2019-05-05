@@ -1,0 +1,168 @@
+---
+title: "Ch 16 Excercises"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+#Chapter 16 Excercises
+
+## 1
+**The probability of recovery from a certain disease is 0.15. Nine people have contracted the disease. What is the probability that at most 2 of them recover? What is the expected number that will recover?**  
+
+## 3
+
+**An airline knows that on average 10% of people making reservations on a certain flight will not show up. So they sell 20 tickets for a flight that can only hold 18 passengers.**  
+
+<<<<<<< HEAD
+
+=======
+>>>>>>> b5b74044d14ad1d6f7f0be023f6c2f651f764215
+* **a) Assuming individual reservations are independent, what is the probability that there will be a seat available for every passenger that shows up?**  
+
+This is a Binomial Distribution, the odds that there is 1 person and 18 seats, 2 people and 18 seats....up to 18 people in 18 seats. so P(x <= 18) (out of twenty)
+
+`r pbinom(18,20, prob = 0.9)`  
+
+
+* **b) Now assume there are 15 flights of this type in one evening. Let N0 be the number of these flights on which everyone who shows up gets a seat and N1 be the number of these flights that leave just one disgruntled person behind. What are the distributions of N0 and N1? What are their means and variances?**  
+
+I'm honestly not sure HOW to think of this problem...
+
+N0 is a geometric distribution (Seats for each passange BEFORE you run into an issue with to many passanges). The odds of each flight being okay (From above) is 0.608253. So we have
+
+N1 is a Negative Binomail distribution (number of success with one failure on 19 tries)
+* **c) The independence assumption in (a) is not really very realistic. Why? Try to describe what might be a more realistic model for this situation.**
+
+If everyone traveled alone, then the assumption would hold. It breaks down when people travel in groups (Like a family, or  business team.) a More realistic assumption would to be to figuer out the size of groups that arrive.
+
+  
+## 5
+**A couple decides to keep having children until they have a daughter. That is, they stop when they get a daughter even if she is their first child. Let N be the number of children they have. Assume that they are equally likely to have a boy or a girl and that the sexes of their children are independent.**  
+
+* **(a). What is the distribution of N? E(N)? Var (N)?**  
+
+
+<<<<<<< HEAD
+Negative Binomial
+
+E(N) = 1
+Var(N) = 1 * (1 - .5)/(.5)^2 = 
+
+* **(b). Write down the probabilities that N is 1, 2, or 3.**  
+
+N(1) = 0.5
+N(2) = 0.75
+n(3) = 0.875
+
+**Another couple decides to do the same thing but they don’t want an only child. That is they have two children and then only keep going if they haven’t yet had a daughter. Let M be the number of children they have.**  
+
+
+* **(c). Calculate P(M = 1), P(M = 2), and P(M = 3).**  
+
+P(1) DNE, it isn't in the sample space
+P(2) 0.75
+P(3) 0.875
+* **(d). Explain why we must have P(N = i) = P(M = i) for any i ≥ 3.**  
+
+Should be fairly obvious that once they have two kids, both boys, then we back into the same sample space as the previous problem
+
+* **(e). Using the above information calculate E(M). Hint: use the known value of E(N) and consider the difference E(N) − E(M).**  
+
+
+
+## 7 
+**If X has a Poisson distribution and P(X = 0) = 0.2, find P(X ≥ 2)**  
+
+$\frac{e^{(-\lambda)}\lambda^x}{x!} = \frac{e^{(-\lambda)}\lambda}{1} = 0.2 $
+$\lambda = 0.2 * e^{(\lambda)} \approx 2.54$
+$ln(\lambda) = ln(0.2) + \lambda $
+$\frac{e^{(-\lambda)}\lambda^x}{x!} = \frac{e^{(-2.54)}2.54^2}{2} = 0.02592214$
+
+=======
+* **(b). Write down the probabilities that N is 1, 2, or 3.**  
+
+**Another couple decides to do the same thing but they don’t want an only child. That is they have two children and then only keep going if they haven’t yet had a daughter. Let M be the number of children they have.**  
+
+* **(c). Calculate P(M = 1), P(M = 2), and P(M = 3).**  
+* **(d). Explain why we must have P(N = i) = P(M = i) for any i ≥ 3.**  
+* **(e). Using the above information calculate E(M). Hint: use the known value of E(N) and consider the difference E(N) − E(M).**  
+
+## 7 
+**If X has a Poisson distribution and P(X = 0) = 0.2, find P(X ≥ 2)**  
+
+>>>>>>> b5b74044d14ad1d6f7f0be023f6c2f651f764215
+## 9
+**Large batches of components are delivered to two factories, A and B. Each batch is subjected to an acceptance sampling scheme as follows:**  
+**Factory A: Accept the batch if a random sample of 10 components contains less than two defectives. Otherwise reject the batch.**  
+**Factory B: Take a random sample of five components. Accept the batch if this sample contains no defectives. Reject the batch if this sample contains two or more defectives. If the sample contains one defective, take a further sample of five and accept the batch if this sample contains no defectives. If the fraction defective in the batch is p, find the probabilities of accepting a batch under each scheme.**  
+<<<<<<< HEAD
+  
+
+Factory A: store if there are two or more faulty in 10, thenstop, so p(reject) = p(X >=2)
+
+1 - pbinom(1,10,p)
+
+Factory B:
+
+pbinom(0, 5, p) + pbinom(1,5,p) * pbinom(0,5,p)
+
+
+
+**Write down an expression for the average number sampled in factory B and find its maximum value.**  
+
+5p + 1p
+
+## 11
+**A contractor rents out a piece of heavy equipment for t hours and is paid \$50 per hour. The equipment tends to overheat and if it overheats x times during the hiring period, the contractor will have to pay a repair cost ** $\$x^2$**. The number of times the equipment overheats in t hours can be assumed to have a Poisson distribution with mean 2t. What value of t will maximise the expected profit of the contractor?**
+
+so lambda = 2t = y
+
+so exp(-y)*y^x/x! is the expected overheat count
+so the expectation of the posion distribution is y, so y^2 is the expected cost
+the sales is y/2 *50
+profit = 25y - y^2
+
+
+the first deritavie gives us 25 -2y, set this equal to zero
+2y = 25
+y = 12.5 (but becuase y = 2t) we have t = 6.25
+
+I'm going to do this visuall first by running over x from 0 to 20 and y from 0 to 100
+```{r}
+p_profit = function(y){ 25*y - y^2 }
+y = 1:20
+x = 1
+plot(y, p_profit(y) )
+
+```
+
+
+or we can do this by walking across y and x and calculating the expected outcome
+
+```{r}
+
+p_profit = function(x,y) { 25*y - (x * exp(-y)*y^(x)/factorial(x))^2 }
+
+y = 1:20
+x = 1:20
+
+df_grid = expand.grid(x = x, y = y)
+df_grid$profit = p_profit(df_grid$x, df_grid$y)
+
+library(tidyverse)
+
+df_grid %>% spread(x, profit, fill = 0)
+
+
+```
+
+
+boom, y = 12 or 13 has the hieghest profit, ergo t = 6 or 6.5, which is right in line with what we had previousl
+=======
+**Write down an expression for the average number sampled in factory B and find its maximum value.**
+
+## 11
+**A contractor rents out a piece of heavy equipment for t hours and is paid \$50 per hour. The equipment tends to overheat and if it overheats x times during the hiring period, the contractor will have to pay a repair cost ** $\$x^2$**. The number of times the equipment overheats in t hours can be assumed to have a Poisson distribution with mean 2t. What value of t will maximise the expected profit of the contractor?**
+>>>>>>> b5b74044d14ad1d6f7f0be023f6c2f651f764215

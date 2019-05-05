@@ -1,0 +1,131 @@
+---
+title: "Ch.9 Additional Linear Modeling Topics"
+output: html_document
+---
+
+# Ch.9 Additional Linear Modeling Topics"
+
+So, we are going to return to linear models, but are more going to fucus on three diffrent aspects of them.   
+* handling hihgly correlation data
+* fitting binary type models
+* looking at Hierachical Linear Models (HLM) (the NON Baysian methodology)
+
+## Highly correlated data
+
+### the setup
+
+Okay, let's say we load the data set from ch.4
+
+```{r}
+cust.df = read.csv("http://goo.gl/PmPkaG")
+summary(cust.df)
+
+
+```
+
+Looks good, let's a correlation of complete cases:
+
+```{r, fig.width= 12}
+
+pairs(cust.df[complete.cases(cust.df), -4])
+```
+
+Hrrmmmm, intresting.  e looks like we have some very very VERY high correlations going on in the middle of that chart. So, if we were to run a normal lm like soo.... 
+
+
+```{r}
+cust.df.bc = subset(cust.df[,-1], online.spend > 0)
+
+spend.m1 = lm(online.spend ~., data = cust.df.bc)
+summary(spend.m1)
+```
+
+You'll notice that several standard errors are HUGE, relative to their coifficnets, which means we are highly uncertain about them. TWo things can cause this 1) too little data (which we don't have to worry about in this case) or 2) correlatied variables. Indeed, we see that in the above chart. 
+
+
+### testing for Collinearity
+
+We can look at the Variance Inflaction Factor, which calculates the influence of one variables on the other. Generally speaking, anything higher than 5 VIF is suspect
+
+```{r}
+library(car)
+vif(spend.m1)
+```
+
+Ick, there are several variables that have VIF >> 5. so what can we do about this.
+
+*  OMit the variables that are highly correlated
+*  Use PCA to create a new variable out of the correlated variables
+*  use another approach, like random forest
+
+### Omitting highly correlated variables
+
+let's omit the variables and see what happens
+
+```{r}
+spend.m2 = lm(online.spend ~ . -online.trans - store.trans,
+              data = cust.df.bc
+              )
+
+vif(spend.m2)
+```
+
+MUVHO BIRNE!  Looking good
+
+### PCA to remove highly correlated variables
+
+as previously mentioned on an RMarkdown that I did NOT make, PCA rotates the data and creates variables along directions of high correlation. In otherwords, we create uncorrelated variables.
+
+Time for rotation of the highly correlated variables
+
+```{r}
+pc.online = prcomp(cust.df.bc[, c("online.visits","online.trans")])
+pc.store = prcomp(cust.df.bc[,c("store.trans","store.spend")])
+cust.df.bc$online = pc.online$x[,1]
+cust.df.bc$store = pc.store$x[,1]
+
+spend.m3 = lm(online.spend ~ email + 
+                              age + 
+                              credit.score + 
+                              distance.to.store + 
+                              sat.service +
+                              sat.selection + 
+                              online + 
+                              store,
+                data=cust.df.bc)
+
+summary(spend.m3)
+```
+
+Noice!!!! Bare in mind though, it is hard to work backwards from the online variables to decompose PCA to the origninal variables
+
+## Linear Models for Binary Outcomes Logistic Regression
+
+You've done this before, just yea, we will jump right into it.
+
+getting the data
+
+```{r}
+pass.df <- read.csv("http://goo.gl/J8MH6A")
+pass.df$Promo <- factor(pass.df$Promo, levels=c("NoBundle", "Bundle"))
+summary(pass.df)
+```
+
+
+running regression
+
+```{r}
+pass.m1 =glm(Pass ~ Promo, data = pass.df, family = binomial)
+
+summary(pass.m1)
+```
+
+Note, one intresting aspect. If you raise the Coeff to E (ie exp ^ B) and subtract one, this will tell you THE PERCENTAGE CHANGE relative to nothing
+
+well....that was easy.
+
+## Hierachical Linear Models
+
+I'm really still not sure what's going on here, but needless to say, it estimates the overall model, the a model for EACH GROUP/PEOPLE WE SPECIFIY
+
+aaaand....I'm done :/

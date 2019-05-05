@@ -1,0 +1,190 @@
+---
+title: "Ch 11 Exercises"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+#Chapter 11 Excercises
+
+## 2
+
+**Suppose **$f : [0,2\pi] \to [0,\infty]$ **is coninuous and ** $f(0)=f(2\pi)$ **for ** $(x,y) \in R^2$ **let ** $(R, \theta)$ **be the polar coordinates of (x,y), so** $x=Rcos(\theta)$ **and** $y=Rsin(\theta)$. **Define the set** $A\subset R^2$ **by** $(x,y) \in A \ if \ R \leq f(\theta)$
+
+**We consider the problem of calculating the area of A. We approximate the are of A using triangles. for small** $\epsilon$**, the area of the triangle with vertices at  **
+$(0,0),\ (f(\theta)cos(\theta),f(\theta)sin(\theta) ),\ (f(\theta + \epsilon)cos(\theta+\epsilon),f(\theta+\epsilon)sin(\theta+\epsilon) )$ **is** $\frac{sin(\epsilon)f(\theta)f(\theta+\epsilon)}{2}\approx\epsilon f(\theta)f(\theta + \epsilon)$
+
+**Thus the area of A is apporx**
+\[
+\frac{\sum_{k=0}^{n-1}\pi f(\frac{s\pi k}{2})f(\frac{2\pi(k+1)}{n})}{n}
+\]
+
+**Write a program to numerically calculate this polar integral using the sumation formula above**
+
+```{r}
+polar_int = function(fnct, n, verbose = FALSE){
+  summer = 0
+  iter = 0
+  const = 2*pi/n
+  while(iter < n){
+    k = fnct(const*iter)
+    k_1 = fnct(const*(iter+1))
+    summer = summer + (pi/n * k * k_1)
+    iter = iter + 1
+    if(verbose){
+    cat("At iteration", iter, "value of the sum is:", summer, "\n")
+    }
+  }
+  return(summer)
+  
+}
+
+f_ch11_ex2_a = function(x){
+return(2)
+}
+
+f_ch11_ex2_b = function(x){
+return(4*pi^2 - (x-2*pi)^2)
+}
+```
+
+let's test the first case
+
+```{r}
+polar_int(f_ch11_ex2_a, 10)
+polar_int(f_ch11_ex2_a, 100)
+polar_int(f_ch11_ex2_a, 1000)
+polar_int(f_ch11_ex2_a, 10000)
+
+```
+and the second case
+
+```{r}
+polar_int(f_ch11_ex2_b, 10)
+polar_int(f_ch11_ex2_b, 100)
+polar_int(f_ch11_ex2_b, 1000)
+polar_int(f_ch11_ex2_b, 10000)
+
+```
+
+
+## 4
+
+**Consider**
+\[
+I = \int_0^15x^4dx=1
+\]
+**Let** $T_n$ **be the approximation of I given by the trapezoid rule with a partitition of size n and let** $S_n$ **be the approximation given by Simpson's rule with a partition of size n.**
+
+**Let** $n_T(\epsilon)$ **be the samllest value of n for which** $|T_n-I|\leq\epsilon$ **and let** $n_s(\epsilon)$ **be the smallest value of n for which** $|S_n-I|\leq\epsilon$**. Plot** $n_s(\epsilon)$ **and** $n_T(\epsilon)$ **against** $\epsilon$ ** for** $\epsilon=2^{-k}, k =2,\dots,16.$
+
+
+okay, let's first get the functions ready to roll
+
+```{r}
+simpson_n <- function(ftn, a, b, n = 100) {
+  # numerical integral of ftn from a to b
+  # using Simpson's rule with n subdivisions
+  #
+  # ftn is a function of a single variable
+  # we assume a < b and n is a positive even integer
+
+  n <- max(c(2*(n %/% 2), 4))
+  h <- (b-a)/n
+  x.vec1 <- seq(a+h, b-h, by = 2*h)
+  x.vec2 <- seq(a+2*h, b-2*h, by = 2*h)
+  f.vec1 <- sapply(x.vec1, ftn)
+  f.vec2 <- sapply(x.vec2, ftn)
+  S <- h/3*(ftn(a) + ftn(b) + 4*sum(f.vec1) + 2*sum(f.vec2))
+  return(S)
+}
+
+trapezoid <- function(ftn, a, b, n = 100) {
+  # numerical integral of ftn from a to b
+  # using the trapezoid rule with n subdivisions
+  #
+  # ftn is a function of a single variable
+  # we assume a < b and n is a positive integer
+  
+  h <- (b-a)/n
+  x.vec <- seq(a, b, by = h)
+  f.vec <- sapply(x.vec, ftn)
+  T <- h*(f.vec[1]/2 + sum(f.vec[2:n]) + f.vec[n+1]/2)
+  return(T)
+}
+
+f_ch11_ex4_a = function(x){
+return(5*x^4)
+}
+
+t_n = function(epsilon){
+  a = 0
+  b = 1
+  cur = 0
+  n = 0
+  while(abs(cur - 1) > epsilon){
+    n = n + 1
+    cur = trapezoid(f_ch11_ex4_a, 0, 1, n)
+  }
+  return(n)
+}
+
+s_n = function(epsilon){
+  a = 0
+  b = 1
+  cur = 0
+  n = 0
+  while(abs(cur - 1) > epsilon){
+    n = n + 1
+    cur = simpson_n(f_ch11_ex4_a, 0, 1, n)
+  }
+  return(n)
+}
+
+```
+
+good, everything's ready, let's DO THIS!
+
+```{r}
+k = 2:16
+epi = 2^(-k)
+
+tn = sapply(epi, t_n)
+sn = sapply(epi, s_n)
+
+plot(tn, col = 'green')
+points(sn, col = 'red')
+```
+
+## 6
+
+**The function II below implements the trapezoi method of integration**
+
+```{r}
+II = function(f,a,b,n){
+  if(n > 0){
+    m = (a+b)/2
+    cat("At iteration", n, "value of the sum is:", m, "\n")
+    return(II(f,a,m,n-1) + II(f,m,b,n-1))
+  } else {
+    return((f(a)+f(b))*(b-a)/2) #(*)
+  }
+}
+
+```
+
+**what sort of object should each input be**
+f is a function that returns one value,
+a,b,and n are scalurs
+
+**in terms of n, what size partitions is this implementatio usings?**
+
+n equal partitions
+
+**the function fails if you give it a value of n equal to 2014or larger. Why?**
+
+Due to the level of recursion
+
+**By changings just the last line you can change the function to an implementation of Sipson's method. How should you change it, and how large will the error be when you do (As a function of n)**

@@ -1,0 +1,35 @@
+# History files
+.Rhistory
+
+# Example code in package build process
+*-Ex.R
+
+# R data files from past sessions
+.Rdata
+
+# RStudio files
+.Rproj.user/
+.Rproj.user
+
+<<<<<<< HEAD
+# File for the pointers within each file system, will need to be set up on
+# each computer
+
+le_pointer.txt
+
+
+=======
+>>>>>>> b5b74044d14ad1d6f7f0be023f6c2f651f764215
+<<<<<<< HEAD
+# Data files that are too big to move around
+Classes/Analytics Vidhya/Human_Activity_Recognition_Dataset/Data/
+DataScience/Classes/Analytics Vidhya/Human_Activity_Recognition_Dataset/Data/
+=======
+# Data file
+DataScience/Classes/Analytics Vidhya/Human_Activity_Recognition_Dataset/Data/*
+>>>>>>> d80fb567c536b5e889bca50d59ffcc7e2176e3e5
+<<<<<<< HEAD
+
+
+=======
+>>>>>>> b5b74044d14ad1d6f7f0be023f6c2f651f764215
